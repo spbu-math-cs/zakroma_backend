@@ -22,3 +22,19 @@ func GetDietWithId(c *gin.Context) {
 
 	c.JSON(http.StatusOK, dish)
 }
+
+func GetDietWithHash(c *gin.Context) {
+	hash, err := strconv.Atoi(c.Params.ByName("hash"))
+	if err != nil {
+		c.String(http.StatusBadRequest, err.Error())
+		return
+	}
+
+	dish, err := stores.GetDietWithHash(hash)
+	if err != nil {
+		c.String(http.StatusBadRequest, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, dish)
+}
