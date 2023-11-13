@@ -65,14 +65,16 @@ func GetDietWithHash(hash int) (schemas.Diet, error) {
 	err = db.
 		QueryRow(`
 			select
-				diet_hash,
+			    diet_id,
+				hash,
 				diet_name
 			from
 			    diet
 			where
-			    diet_hash = $1`,
+			    hash = $1`,
 			hash).
-		Scan(&diet.Hash,
+		Scan(&diet.Id,
+			&diet.Hash,
 			&diet.Name)
 	if err != nil {
 		return schemas.Diet{}, err
@@ -86,10 +88,10 @@ func GetDietWithHash(hash int) (schemas.Diet, error) {
 			from
 			    diet_day_diet
 			where
-			    diet_hash = $1
+			    diet_id = $1
 			order by
 			    index`,
-			id)
+			diet.Id)
 	if err != nil {
 		return schemas.Diet{}, err
 	}
