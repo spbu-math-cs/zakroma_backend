@@ -7,4 +7,5 @@ import (
 
 func DietsRouting(router *gin.RouterGroup) {
 	router.GET("/:id", handlers.GetDietWithId)
+	router.GET("/hash/:hash", handlers.GetDietWithHash)
 }
