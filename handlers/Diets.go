@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
@@ -14,11 +15,26 @@ func GetDietWithId(c *gin.Context) {
 		return
 	}
 
-	dish, err := stores.GetDietWithId(id)
+	session := sessions.Default(c)
+	userId := session.Get("id")
+
+	if userId == nil {
+		c.Status(http.StatusUnauthorized)
+		return
+	}
+
+	access := stores.CheckDietAccessWithId(id, userId.(int))
+
+	if !access {
+		c.Status(http.StatusUnauthorized)
+		return
+	}
+
+	diet, err := stores.GetDietWithId(id)
 	if err != nil {
 		c.String(http.StatusBadRequest, err.Error())
 		return
 	}
 
-	c.JSON(http.StatusOK, dish)
+	c.JSON(http.StatusOK, diet)
 }
