@@ -104,6 +104,69 @@ func GetDishShortWithId(id int) (schemas.Dish, error) {
 	return dish, nil
 }
 
+func checkMatch(name string, pattern string) bool {
+	for i := 0; i < len(name)-len(pattern)+1; i++ {
+		if name[i:i+len(pattern)] == pattern {
+			return true
+		}
+	}
+	return false
+}
+
+func GetDishesShortWithName(name string, rangeBegin int, rangeEnd int) []schemas.Dish {
+	db, err := CreateConnection()
+	if err != nil {
+		return make([]schemas.Dish, 0)
+	}
+
+	var matchedDishes []int
+	order := 0
+	rows, err := db.Query(`
+			select
+				dishes.dish_id,
+				dishes.dish_name
+			from
+			    dishes`)
+
+	if err != nil {
+		rows.Close()
+		return make([]schemas.Dish, 0)
+	}
+
+	for rows.Next() {
+		var dishId int
+		var dishName string
+		if err = rows.Scan(&dishId, &dishName); err != nil {
+			return make([]schemas.Dish, 0)
+		}
+
+		if !checkMatch(dishName, name) {
+			continue
+		}
+
+		order += 1
+		if order > rangeEnd {
+			break
+		}
+		if rangeBegin <= order {
+			matchedDishes = append(matchedDishes, dishId)
+		}
+	}
+	rows.Close()
+
+	dishes := make([]schemas.Dish, 0)
+	for id := range matchedDishes {
+		dish, err := GetDishShortWithId(id)
+		if err != nil {
+			return make([]schemas.Dish, 0)
+		}
+
+		dishes = append(dishes, dish)
+	}
+
+	return dishes
+}
+
 func GetDishesShortWithTags(tags []string) []schemas.Dish {
 	db, err := CreateConnection()
 	if err != nil {
