@@ -1,6 +1,9 @@
 package stores
 
-import "zakroma_backend/schemas"
+import (
+	"sort"
+	"zakroma_backend/schemas"
+)
 
 func GetDishWithId(id int) (schemas.Dish, error) {
 	db, err := CreateConnection()
@@ -104,24 +107,55 @@ func GetDishShortWithId(id int) (schemas.Dish, error) {
 	return dish, nil
 }
 
-func GetDishesShortWithTags(tags []string) []schemas.Dish {
+func GetDishesShortWithTags(tags []string, rangeBegin int, rangeEnd int) []schemas.Dish {
 	db, err := CreateConnection()
 	if err != nil {
 		return make([]schemas.Dish, 0)
 	}
 
-	var tagsId []int
-	for i := range tags {
-		var id int
-		if err = db.QueryRow(`select tag_id from tags where tag = $1`, tags[i]).Scan(&id); err != nil {
+	order := 0
+	var matchedDishes []int
+
+	if len(tags) == 0 {
+		rows, err := db.Query(`
+			select
+				dishes.dish_id
+			from
+			    dishes`)
+
+		if err != nil {
+			rows.Close()
 			return make([]schemas.Dish, 0)
 		}
-		tagsId = append(tagsId, id)
-	}
 
-	var cnt = map[int]int{}
-	for i := range tagsId {
-		rows, err := db.Query(`
+		for rows.Next() {
+			var dishId int
+			if err = rows.Scan(&dishId); err != nil {
+				return make([]schemas.Dish, 0)
+			}
+
+			order += 1
+			if order > rangeEnd {
+				break
+			}
+			if rangeBegin <= order {
+				matchedDishes = append(matchedDishes, dishId)
+			}
+		}
+		rows.Close()
+	} else {
+		var tagsId []int
+		for i := range tags {
+			var id int
+			if err = db.QueryRow(`select tag_id from tags where tag = $1`, tags[i]).Scan(&id); err != nil {
+				return make([]schemas.Dish, 0)
+			}
+			tagsId = append(tagsId, id)
+		}
+
+		var cnt = map[int]int{}
+		for i := range tagsId {
+			rows, err := db.Query(`
 			select
 				dishes_tags.dish_id
 			from
@@ -130,31 +164,46 @@ func GetDishesShortWithTags(tags []string) []schemas.Dish {
 			where
 			    dishes_tags.tag_id = $1`, tagsId[i])
 
-		if err != nil {
+			if err != nil {
+				rows.Close()
+				return make([]schemas.Dish, 0)
+			}
+
+			for rows.Next() {
+				var dishId int
+				if err = rows.Scan(&dishId); err != nil {
+					return make([]schemas.Dish, 0)
+				}
+				cnt[dishId] += 1
+			}
 			rows.Close()
+		}
+
+		for id, matched := range cnt {
+			if matched == len(tagsId) {
+				order += 1
+				if order > rangeEnd {
+					break
+				}
+				if rangeBegin <= order {
+					matchedDishes = append(matchedDishes, id)
+				}
+			}
+		}
+	}
+
+	sort.Slice(matchedDishes, func(i int, j int) bool {
+		return i < j
+	})
+
+	dishes := make([]schemas.Dish, 0)
+	for id := range matchedDishes {
+		dish, err := GetDishShortWithId(id)
+		if err != nil {
 			return make([]schemas.Dish, 0)
 		}
 
-		for rows.Next() {
-			var id int
-			if err = rows.Scan(&id); err != nil {
-				return make([]schemas.Dish, 0)
-			}
-			cnt[id] += 1
-		}
-		rows.Close()
-	}
-
-	var dishes []schemas.Dish
-	for id, matched := range cnt {
-		if matched == len(tagsId) {
-			dish, err := GetDishShortWithId(id)
-			if err != nil {
-				return make([]schemas.Dish, 0)
-			}
-
-			dishes = append(dishes, dish)
-		}
+		dishes = append(dishes, dish)
 	}
 
 	return dishes

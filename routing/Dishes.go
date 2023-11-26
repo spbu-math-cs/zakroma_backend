@@ -8,5 +8,5 @@ import (
 func DishesRouting(router *gin.RouterGroup) {
 	router.GET("/:id", handlers.GetDishWithId)
 	router.GET("/short/:id", handlers.GetDishShortWithId)
-	router.GET("/tags/:tags", handlers.GetDishesShortWithTags)
+	router.GET("/tags", handlers.GetDishesShortWithTags)
 }
