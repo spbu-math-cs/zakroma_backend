@@ -54,3 +54,23 @@ func GetDietWithHash(c *gin.Context) {
 
 	c.JSON(http.StatusOK, dish)
 }
+
+func CreateDiet(c *gin.Context) {
+	type RequestBody struct {
+		Name string `json:"name"`
+	}
+
+	var requestBody RequestBody
+	if err := c.BindJSON(&requestBody); err != nil {
+		c.String(http.StatusBadRequest, err.Error())
+		return
+	}
+
+	id, err := stores.CreateDiet(requestBody.Name)
+	if err != nil {
+		c.String(http.StatusBadRequest, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"id": id})
+}
