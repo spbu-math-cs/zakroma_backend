@@ -44,7 +44,6 @@ func CreateMeal(c *gin.Context) {
 		DietId       int    `json:"diet-id"`
 		DayDietIndex int    `json:"day-diet-index"`
 		Name         string `json:"name"`
-		Dishes       []int  `json:"dishes-ids"`
 	}
 
 	var requestBody RequestBody
@@ -52,10 +51,30 @@ func CreateMeal(c *gin.Context) {
 		c.String(http.StatusBadRequest, err.Error())
 	}
 
-	id, err := stores.CreateMeal(requestBody.DietId, requestBody.DayDietIndex, requestBody.Name, requestBody.Dishes)
+	id, err := stores.CreateMeal(requestBody.DietId, requestBody.DayDietIndex, requestBody.Name)
 	if err != nil {
 		c.String(http.StatusBadRequest, err.Error())
 	}
 
 	c.JSON(http.StatusOK, gin.H{"id": id})
+}
+
+func AddMealDish(c *gin.Context) {
+	type RequestBody struct {
+		MealId   int `json:"meal-id"`
+		DishId   int `json:"dish-id"`
+		Portions int `json:"portions"`
+	}
+
+	var requestBody RequestBody
+	if err := c.BindJSON(&requestBody); err != nil {
+		c.String(http.StatusBadRequest, err.Error())
+	}
+
+	err := stores.AddMealDish(requestBody.MealId, requestBody.DishId, requestBody.Portions)
+	if err != nil {
+		c.String(http.StatusBadRequest, err.Error())
+	}
+
+	c.Status(http.StatusOK)
 }

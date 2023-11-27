@@ -62,7 +62,7 @@ func GetMealWithId(id int) (schemas.Meal, error) {
 	return meal, nil
 }
 
-func CreateMeal(dietId int, dayDietIndex int, name string, dishes []int) (int, error) {
+func CreateMeal(dietId int, dayDietIndex int, name string) (int, error) {
 	db, err := CreateConnection()
 	if err != nil {
 		return -1, err
@@ -122,20 +122,25 @@ func CreateMeal(dietId int, dayDietIndex int, name string, dishes []int) (int, e
 		return -1, err
 	}
 
-	for i := range dishes {
-		dishId := dishes[i]
-		rMealId := 0
-		if err = db.QueryRow(`
+	return mealId, nil
+}
+
+func AddMealDish(mealId int, dishId int, portions int) error {
+	db, err := CreateConnection()
+	if err != nil {
+		return err
+	}
+
+	if err = db.QueryRow(`
 			insert into
 				meals_dishes(meal_id, dish_id, portions)
 			values
 				($1, $2, $3)
 			returning
 				meal_id
-			`, mealId, dishId, 1).Scan(&rMealId); err != nil || rMealId != mealId {
-			return -1, err
-		}
+			`, mealId, dishId, portions).Scan(&mealId); err != nil {
+		return err
 	}
 
-	return mealId, nil
+	return nil
 }
