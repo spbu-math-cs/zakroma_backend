@@ -4,7 +4,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
-	"strings"
 	"zakroma_backend/stores"
 )
 
@@ -59,10 +58,23 @@ func GetDishesShortWithName(c *gin.Context) {
 }
 
 func GetDishesShortWithTags(c *gin.Context) {
-	tagsStr := c.Params.ByName("tags")
-	tags := strings.Split(tagsStr, "$")
+	type RequestBody struct {
+		Tags       []string `json:"tags"`
+		RangeBegin int      `json:"range-begin"`
+		RangeEnd   int      `json:"range-end"`
+	}
 
-	dishes := stores.GetDishesShortWithTags(tags)
+	var requestBody RequestBody
+	if err := c.BindJSON(&requestBody); err != nil {
+		c.String(http.StatusBadRequest, err.Error())
+		return
+	}
+
+	tags := requestBody.Tags
+	rangeBegin := requestBody.RangeBegin
+	rangeEnd := requestBody.RangeEnd
+
+	dishes := stores.GetDishesShortWithTags(tags, rangeBegin, rangeEnd)
 
 	c.JSON(http.StatusOK, dishes)
 }
