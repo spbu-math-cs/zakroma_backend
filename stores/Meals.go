@@ -85,7 +85,7 @@ func CreateMeal(dietId int, dayDietIndex int, name string, dishes []int) (int, e
 	}
 
 	if dayDietId == -1 {
-		dayDietId, err = CreateDayDiet(dietId, dayDietIndex)
+		dayDietId, err = CreateDayDiet(dietId, dayDietIndex, "")
 		if err != nil {
 			return -1, err
 		}

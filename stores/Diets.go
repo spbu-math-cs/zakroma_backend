@@ -109,3 +109,46 @@ func GetDietWithHash(hash int) (schemas.Diet, error) {
 
 	return diet, nil
 }
+
+func CreateDiet(name string) (int, error) {
+	db, err := CreateConnection()
+	if err != nil {
+		return -1, err
+	}
+
+	id := -1
+	if err = db.QueryRow(`
+		insert into
+			diet(diet_name)
+		values
+			($1)
+		returning diet_id
+		`, name).Scan(&id); err != nil {
+		return -1, err
+	}
+
+	for index := 0; index < 7; index++ {
+		dietDayId := -1
+		if err = db.QueryRow(`
+			insert into
+				diet_day(diet_day_name)
+			values
+				('')
+			returning diet_day_id
+			`).Scan(&dietDayId); err != nil {
+			return -1, nil
+		}
+
+		if err = db.QueryRow(`
+			insert into
+				diet_day_diet(diet_id, diet_day_id, index)
+			values
+				($1, $2, $3)
+			returning diet_day_id
+			`, id, dietDayId, index).Scan(&dietDayId); err != nil {
+			return -1, nil
+		}
+	}
+
+	return id, nil
+}
