@@ -38,3 +38,24 @@ func GetMealWithId(c *gin.Context) {
 
 	c.JSON(http.StatusOK, meal)
 }
+
+func CreateMeal(c *gin.Context) {
+	type RequestBody struct {
+		DietId       int    `json:"diet-id"`
+		DayDietIndex int    `json:"day-diet-index"`
+		Name         string `json:"name"`
+		Dishes       []int  `json:"dishes-ids"`
+	}
+
+	var requestBody RequestBody
+	if err := c.BindJSON(&requestBody); err != nil {
+		c.String(http.StatusBadRequest, err.Error())
+	}
+
+	id, err := stores.CreateMeal(requestBody.DietId, requestBody.DayDietIndex, requestBody.Name, requestBody.Dishes)
+	if err != nil {
+		c.String(http.StatusBadRequest, err.Error())
+	}
+
+	c.JSON(http.StatusOK, gin.H{"id": id})
+}

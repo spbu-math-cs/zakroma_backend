@@ -7,4 +7,6 @@ import (
 
 func MealsRouting(router *gin.RouterGroup) {
 	router.GET("/:id", handlers.GetMealWithId)
+
+	router.POST("/create", handlers.CreateMeal)
 }
