@@ -20,10 +20,10 @@ END \$$;
 """
 
 cd scripts; # файлы с заполнением должны лежать в ./scripts
-for FILENAME in `ls . | sort -g`; # перебираем все файлы с заполнением
+for FILENAME in $(ls . | sort -g); # перебираем все файлы с заполнением
 do
-  new_name=`echo $FILENAME | tr ' ' _ | tr - _`; # заменяем в имени файла все пробелы и - на _
-  mv "$FILENAME" $new_name -n; # переименовываем
+  new_name="$(echo $FILENAME | tr ' ' _ | tr - _)";
+  mv "$FILENAME" "$new_name" -n; # заменяем в имени файла все пробелы и '-' на '_'
   if [[ $new_name = *.sql ]]; then # если файл имеет расширение .sql
     echo "\ir scripts/$new_name" >> ../load_all.sql; # добавляем его в скрипт заполнения
   fi;
