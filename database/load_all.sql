@@ -1,16 +1,4 @@
 -- Скрипт для автоматизации заполнения бд
--- !!!
--- !!! ВНИМАНИЕ! Запуск load_all.sql УДАЛИТ ВСЕ ТАБЛИЦЫ в целевой базе
--- !!!
-
-DO $$ DECLARE
-    r RECORD;
-BEGIN
-    FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = current_schema()) LOOP
-            EXECUTE 'DROP TABLE IF EXISTS ' || quote_ident(r.tablename) || ' CASCADE';
-        END LOOP;
-END $$;
-
 \ir scripts/0_DB_creation.sql
 \ir scripts/1_Diet_table_filling.sql
 \ir scripts/2_Dishes_table_filling.sql
