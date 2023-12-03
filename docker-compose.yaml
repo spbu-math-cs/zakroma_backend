@@ -1,0 +1,36 @@
+version: '3.7'
+networks:
+  shared-network:
+    driver: bridge
+    
+services:
+  zakroma_db:
+    container_name: zakroma_db
+    networks:
+      - shared-network
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - ${DB_PORT}:${DB_PORT}
+    volumes:
+      - ./database/scripts:/docker-entrypoint-initdb.d/scripts # wont execute subdirectories scripts
+      - ./database/load_all.sql:/docker-entrypoint-initdb.d/load_all.sql
+
+  zakroma_backend:
+    container_name: zakroma_backend
+    networks:
+      - shared-network
+    build:
+      dockerfile: Dockerfile
+      context: .
+    environment:
+      SERVER_HOST: ${SERVER_HOST}
+      SERVER_PORT: ${SERVER_PORT}
+    ports:
+      - ${SERVER_PORT}:${SERVER_PORT}
+    depends_on:
+      - zakroma_db
+
