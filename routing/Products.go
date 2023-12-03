@@ -6,5 +6,5 @@ import (
 )
 
 func ProductsRouting(router *gin.RouterGroup) {
-	router.GET("/:id", handlers.GetProductWithId)
+	router.GET("/:id", handlers.GetProductById)
 }

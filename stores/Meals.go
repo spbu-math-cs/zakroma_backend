@@ -1,98 +1,111 @@
 package stores
 
-import "zakroma_backend/schemas"
+import (
+	"zakroma_backend/schemas"
+	"zakroma_backend/utils"
+)
 
-func GetMealWithId(id int) (schemas.Meal, error) {
+func GetMealIdByHash(hash string) (int, error) {
+	db, err := CreateConnection()
+	if err != nil {
+		return -1, err
+	}
+
+	var mealId int
+	err = db.QueryRow(`
+		select
+			meal_id
+		from
+			meals
+		where
+			meal_hash = $1`,
+		hash).Scan(
+		&mealId)
+	if err != nil {
+		return -1, err
+	}
+
+	return mealId, nil
+}
+
+func GetMealByHash(hash string) (schemas.Meal, error) {
 	db, err := CreateConnection()
 	if err != nil {
 		return schemas.Meal{}, err
 	}
 
 	var meal schemas.Meal
-	err = db.
-		QueryRow(`
-			select
-			    meal_id,
-			    meal_name
-			from
-			    meals
-			where
-			    meal_id = $1`,
-			id).
-		Scan(&meal.Id,
-			&meal.Name)
-
+	err = db.QueryRow(`
+		select
+			meal_id,
+			meal_hash,
+			meal_name
+		from
+			meals
+		where
+			meal_hash = $1`,
+		hash).Scan(
+		&meal.Id,
+		&meal.Hash,
+		&meal.Name)
 	if err != nil {
 		return schemas.Meal{}, err
 	}
 
-	dishesRows, err := db.
-		Query(`
-			select
-			    meals_dishes.dish_id,
-			    meals_dishes.portions
-			from
-			    meals_dishes
-			where
-			    meals_dishes.meal_id = $1`,
-			id)
-
+	dishesRows, err := db.Query(`
+		select
+			meals_dishes.dish_id,
+			meals_dishes.portions
+		from
+			meals_dishes
+		where
+			meals_dishes.meal_id = $1`,
+		meal.Id)
 	if err != nil {
 		return schemas.Meal{}, err
 	}
-
 	defer dishesRows.Close()
 
 	for dishesRows.Next() {
 		var dishId int
 		var portions float32
-		err = dishesRows.Scan(&dishId, &portions)
-		if err != nil {
+		if err = dishesRows.Scan(
+			&dishId,
+			&portions); err != nil {
 			return schemas.Meal{}, err
 		}
+
 		var mealDish schemas.MealDish
 		mealDish.Portions = portions
-		mealDish.Dish, err = GetDishShortWithId(dishId)
+		mealDish.Dish, err = GetDishShortById(dishId)
 		if err != nil {
 			return schemas.Meal{}, err
 		}
+
 		meal.Dishes = append(meal.Dishes, mealDish)
 	}
 
 	return meal, nil
 }
 
-func CreateMeal(dietId int, dayDietIndex int, name string) (int, error) {
+func CreateMeal(dietHash string, dayDietIndex int, name string) (string, error) {
 	db, err := CreateConnection()
 	if err != nil {
-		return -1, err
+		return "", err
 	}
 
-	dayDietId := -1
-	err = db.
-		QueryRow(`
-			select
-				diet_day_id
-			from
-			    diet_day_diet
-			where
-			    diet_id = $1 and
-			    index = $2`,
-			dietId, dayDietIndex).
-		Scan(&dayDietId)
+	dietId, err := GetDietIdByHash(dietHash)
 	if err != nil {
-		return -1, err
+		return "", err
 	}
 
-	if dayDietId == -1 {
-		dayDietId, err = CreateDayDiet(dietId, dayDietIndex, "")
-		if err != nil {
-			return -1, err
-		}
+	dayDietId, err := GetDayDietId(dietId, dayDietIndex)
+	if err != nil {
+		return "", err
 	}
 
-	mealIndex := 0
-	rows, err := db.Query(`
+	mealIndex := -1
+	maxMealRow, err := db.Query(`
 		select
 		    max(index)
 		from
@@ -100,45 +113,79 @@ func CreateMeal(dietId int, dayDietIndex int, name string) (int, error) {
 		where
 		    diet_day_id = $1
 		group by
-		    diet_day_id
-		`, dayDietId)
+		    diet_day_id`,
+		dayDietId)
+	if err != nil {
+		return "", err
+	}
+	defer maxMealRow.Close()
 
-	for rows.Next() {
-		err = rows.Scan(&mealIndex)
+	for maxMealRow.Next() {
+		err = maxMealRow.Scan(&mealIndex)
 		if err != nil {
-			return -1, err
+			return "", err
 		}
+	}
+	mealIndex++
+
+	hash, err := utils.GenerateRandomHash(64)
+	if err != nil {
+		return "", err
 	}
 
 	mealId := 0
 	if err = db.QueryRow(`
 		insert into
-			meals(meal_name)
+			meals(meal_name, meal_hash)
 		values 
-			($1)
+			($1, $2)
 		returning
-			meals.meal_id
-		`, name).Scan(&mealId); err != nil {
-		return -1, err
+			meal_id`,
+		name, hash).Scan(
+		&mealId); err != nil {
+		return "", err
 	}
 
-	return mealId, nil
+	if err = db.QueryRow(`
+		insert into
+			diet_day_meals(diet_day_id, meal_id, index)
+		values
+			($1, $2, $3)
+		returning
+			meal_id`,
+		dayDietId, mealId, mealIndex).Scan(
+		&dayDietId); err != nil {
+		return "", err
+	}
+
+	return hash, nil
 }
 
-func AddMealDish(mealId int, dishId int, portions int) error {
+func AddMealDish(mealHash string, dishHash string, portions int) error {
 	db, err := CreateConnection()
 	if err != nil {
 		return err
 	}
 
+	mealId, err := GetMealIdByHash(mealHash)
+	if err != nil {
+		return err
+	}
+
+	dishId, err := GetDishIdByHash(dishHash)
+	if err != nil {
+		return err
+	}
+
 	if err = db.QueryRow(`
-			insert into
-				meals_dishes(meal_id, dish_id, portions)
-			values
-				($1, $2, $3)
-			returning
-				meal_id
-			`, mealId, dishId, portions).Scan(&mealId); err != nil {
+		insert into
+			meals_dishes(meal_id, dish_id, portions)
+		values
+			($1, $2, $3)
+		returning
+			meal_id`,
+		mealId, dishId, portions).Scan(
+		&mealId); err != nil {
 		return err
 	}
 

@@ -1,38 +1,21 @@
 package handlers
 
 import (
-	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"strconv"
 	"zakroma_backend/stores"
 )
 
-func GetMealWithId(c *gin.Context) {
-	id, err := strconv.Atoi(c.Params.ByName("id"))
+func GetMealByHash(c *gin.Context) {
+	hash := c.Params.ByName("hash")
+	if len(hash) == 0 {
+		c.String(http.StatusBadRequest, "something bad with field 'hash'")
+		return
+	}
+
+	meal, err := stores.GetMealByHash(hash)
 	if err != nil {
-		c.String(http.StatusBadRequest, err.Error())
-		return
-	}
-
-	session := sessions.Default(c)
-	userId := session.Get("id")
-
-	if userId == nil {
-		c.Status(http.StatusUnauthorized)
-		return
-	}
-
-	access := stores.CheckMealAccessWithId(id, userId.(int))
-
-	if !access {
-		c.Status(http.StatusUnauthorized)
-		return
-	}
-
-	meal, err := stores.GetMealWithId(id)
-	if err != nil {
-		c.String(http.StatusBadRequest, err.Error())
+		c.String(http.StatusNotFound, err.Error())
 		return
 	}
 
@@ -41,39 +24,41 @@ func GetMealWithId(c *gin.Context) {
 
 func CreateMeal(c *gin.Context) {
 	type RequestBody struct {
-		DietId       int    `json:"diet-id"`
+		DietHash     string `json:"diet-hash"`
 		DayDietIndex int    `json:"day-diet-index"`
 		Name         string `json:"name"`
 	}
 
 	var requestBody RequestBody
 	if err := c.BindJSON(&requestBody); err != nil {
-		c.String(http.StatusBadRequest, err.Error())
+		c.String(http.StatusBadRequest, "request body does not match the protocol")
 	}
 
-	id, err := stores.CreateMeal(requestBody.DietId, requestBody.DayDietIndex, requestBody.Name)
+	hash, err := stores.CreateMeal(requestBody.DietHash,
+		requestBody.DayDietIndex, requestBody.Name)
 	if err != nil {
-		c.String(http.StatusBadRequest, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
 	}
 
-	c.JSON(http.StatusOK, gin.H{"id": id})
+	c.JSON(http.StatusOK, gin.H{"hash": hash})
 }
 
 func AddMealDish(c *gin.Context) {
 	type RequestBody struct {
-		MealId   int `json:"meal-id"`
-		DishId   int `json:"dish-id"`
-		Portions int `json:"portions"`
+		MealHash string `json:"meal-hash"`
+		DishHash string `json:"dish-hash"`
+		Portions int    `json:"portions"`
 	}
 
 	var requestBody RequestBody
 	if err := c.BindJSON(&requestBody); err != nil {
-		c.String(http.StatusBadRequest, err.Error())
+		c.String(http.StatusBadRequest, "request body does not match the protocol")
 	}
 
-	err := stores.AddMealDish(requestBody.MealId, requestBody.DishId, requestBody.Portions)
+	err := stores.AddMealDish(requestBody.MealHash,
+		requestBody.DishHash, requestBody.Portions)
 	if err != nil {
-		c.String(http.StatusBadRequest, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
 	}
 
 	c.Status(http.StatusOK)

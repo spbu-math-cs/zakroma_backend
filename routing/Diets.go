@@ -6,7 +6,6 @@ import (
 )
 
 func DietsRouting(router *gin.RouterGroup) {
-	router.GET("/:id", handlers.GetDietWithId)
-	router.GET("/hash/:hash", handlers.GetDietWithHash)
+	router.GET("/:hash", handlers.GetDietByHash)
 	router.POST("/create", handlers.CreateDiet)
 }

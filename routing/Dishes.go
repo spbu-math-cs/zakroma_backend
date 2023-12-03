@@ -6,8 +6,8 @@ import (
 )
 
 func DishesRouting(router *gin.RouterGroup) {
-	router.GET("/:id", handlers.GetDishWithId)
-	router.GET("/short/:id", handlers.GetDishShortWithId)
-	router.GET("/name", handlers.GetDishesShortWithName)
-	router.GET("/tags", handlers.GetDishesShortWithTags)
+	router.GET("/:hash", handlers.GetDishByHash)
+	router.GET("/short/:hash", handlers.GetDishShortByHash)
+	router.GET("/name", handlers.GetDishesShortByName)
+	router.GET("/tags", handlers.GetDishesShortByTags)
 }

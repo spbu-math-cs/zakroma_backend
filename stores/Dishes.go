@@ -5,66 +5,64 @@ import (
 	"zakroma_backend/schemas"
 )
 
-func GetDishWithId(id int) (schemas.Dish, error) {
+func GetDishIdByHash(hash string) (int, error) {
+	db, err := CreateConnection()
+	if err != nil {
+		return -1, err
+	}
+
+	var dishId int
+	if err = db.QueryRow(`
+		select
+		    dish_id
+		from
+			dishes
+		where
+			dish_hash = $1`,
+		hash).Scan(
+		&dishId); err != nil {
+		return -1, err
+	}
+
+	return dishId, nil
+}
+
+func GetDishByHash(hash string) (schemas.Dish, error) {
 	db, err := CreateConnection()
 	if err != nil {
 		return schemas.Dish{}, err
 	}
 
-	var dish schemas.Dish
-	err = db.
-		QueryRow(`
-			select
-				dish_id,
-				dish_name,
-				calories,
-				proteins,
-				fats,
-				carbs,
-				receipt
-			from
-			    dishes
-			where
-			    dish_id = $1`,
-			id).
-		Scan(&dish.Id,
-			&dish.Name,
-			&dish.Calories,
-			&dish.Proteins,
-			&dish.Fats,
-			&dish.Carbs,
-			&dish.Recipe)
+	dish, err := GetDishShortByHash(hash)
 	if err != nil {
 		return schemas.Dish{}, err
 	}
 
-	productsRows, err := db.
-		Query(`
-			select
-				products.product_id,
-				products.product_name,				
-				products_dishes.amount,
-				products.unit_of_measurement
-			from
-			    products_dishes,
-			    products
-			where
-			    products_dishes.dish_id = $1 and
-			    products_dishes.product_id = products.product_id`,
-			id)
+	productsRows, err := db.Query(`
+		select
+			products.product_id,
+			products.product_name,				
+			products_dishes.amount,
+			products.unit_of_measurement
+		from
+			products_dishes,
+			products
+		where
+			products_dishes.dish_id = $1 and
+			products_dishes.product_id = products.product_id`,
+		dish.Id)
 	if err != nil {
 		return schemas.Dish{}, err
 	}
-
 	defer productsRows.Close()
 
 	for productsRows.Next() {
 		var product schemas.DishProduct
-		if err = productsRows.
-			Scan(&product.ProductId,
-				&product.Name,
-				&product.Amount,
-				&product.UnitOfMeasurement); err != nil {
+		if err = productsRows.Scan(
+			&product.ProductId,
+			&product.Name,
+			&product.Amount,
+			&product.UnitOfMeasurement); err != nil {
 			return schemas.Dish{}, err
 		}
 		dish.Products = append(dish.Products, product)
@@ -73,34 +71,72 @@ func GetDishWithId(id int) (schemas.Dish, error) {
 	return dish, nil
 }
 
-func GetDishShortWithId(id int) (schemas.Dish, error) {
+func GetDishShortByHash(hash string) (schemas.Dish, error) {
 	db, err := CreateConnection()
 	if err != nil {
 		return schemas.Dish{}, err
 	}
 
 	var dish schemas.Dish
-	err = db.
-		QueryRow(`
-			select
-				dish_id,
-				dish_name,
-				calories,
-				proteins,
-				fats,
-				carbs
-			from
-			    dishes
-			where
-			    dish_id = $1`,
-			id).
-		Scan(&dish.Id,
-			&dish.Name,
-			&dish.Calories,
-			&dish.Proteins,
-			&dish.Fats,
-			&dish.Carbs)
+	if err = db.QueryRow(`
+		select
+		    dish_id,
+		    dish_hash,
+    		dish_name,
+    		calories,
+    		proteins,
+    		fats,
+    		carbs,
+    		recipe
+		from
+			dishes
+		where
+			dish_hash = $1`,
+		hash).Scan(
+		&dish.Id,
+		&dish.Hash,
+		&dish.Name,
+		&dish.Calories,
+		&dish.Proteins,
+		&dish.Fats,
+		&dish.Carbs,
+		&dish.Recipe); err != nil {
+		return schemas.Dish{}, err
+	}
+
+	return dish, nil
+}
+
+func GetDishShortById(id int) (schemas.Dish, error) {
+	db, err := CreateConnection()
 	if err != nil {
+		return schemas.Dish{}, err
+	}
+
+	var dish schemas.Dish
+	if err = db.QueryRow(`
+		select
+		    dish_id,
+		    dish_hash,
+    		dish_name,
+    		calories,
+    		proteins,
+    		fats,
+    		carbs,
+    		recipe
+		from
+			dishes
+		where
+			dish_id = $1`,
+		id).Scan(
+		&dish.Id,
+		&dish.Hash,
+		&dish.Name,
+		&dish.Calories,
+		&dish.Proteins,
+		&dish.Fats,
+		&dish.Carbs,
+		&dish.Recipe); err != nil {
 		return schemas.Dish{}, err
 	}
 
@@ -116,7 +152,7 @@ func checkMatch(name string, pattern string) bool {
 	return false
 }
 
-func GetDishesShortWithName(name string, rangeBegin int, rangeEnd int) []schemas.Dish {
+func GetDishesShortByName(name string, rangeBegin int, rangeEnd int) []schemas.Dish {
 	db, err := CreateConnection()
 	if err != nil {
 		return make([]schemas.Dish, 0)
@@ -124,22 +160,25 @@ func GetDishesShortWithName(name string, rangeBegin int, rangeEnd int) []schemas
 
 	var matchedDishes []int
 	order := 0
-	rows, err := db.Query(`
-			select
-				dishes.dish_id,
-				dishes.dish_name
-			from
-			    dishes`)
-
+	dishesRows, err := db.Query(`
+		select
+			dish_id,
+			dish_name
+		from
+			dishes
+		order by
+		    dish_id`)
 	if err != nil {
-		rows.Close()
 		return make([]schemas.Dish, 0)
 	}
+	defer dishesRows.Close()
 
-	for rows.Next() {
+	for dishesRows.Next() {
 		var dishId int
 		var dishName string
-		if err = rows.Scan(&dishId, &dishName); err != nil {
+		if err = dishesRows.Scan(
+			&dishId,
+			&dishName); err != nil {
 			return make([]schemas.Dish, 0)
 		}
 
@@ -155,15 +194,13 @@ func GetDishesShortWithName(name string, rangeBegin int, rangeEnd int) []schemas
 			matchedDishes = append(matchedDishes, dishId)
 		}
 	}
-	rows.Close()
 
 	dishes := make([]schemas.Dish, 0)
 	for id := range matchedDishes {
-		dish, err := GetDishShortWithId(id)
+		dish, err := GetDishShortById(id)
 		if err != nil {
 			return make([]schemas.Dish, 0)
 		}
-
 		dishes = append(dishes, dish)
 	}
 
@@ -180,20 +217,20 @@ func GetDishesShortWithTags(tags []string, rangeBegin int, rangeEnd int) []schem
 	var matchedDishes []int
 
 	if len(tags) == 0 {
-		rows, err := db.Query(`
+		dishesRows, err := db.Query(`
 			select
-				dishes.dish_id
+				dish_id
 			from
 			    dishes`)
-
 		if err != nil {
-			rows.Close()
 			return make([]schemas.Dish, 0)
 		}
+		defer dishesRows.Close()
 
-		for rows.Next() {
+		for dishesRows.Next() {
 			var dishId int
-			if err = rows.Scan(&dishId); err != nil {
+			if err = dishesRows.Scan(
+				&dishId); err != nil {
 				return make([]schemas.Dish, 0)
 			}
 
@@ -205,12 +242,19 @@ func GetDishesShortWithTags(tags []string, rangeBegin int, rangeEnd int) []schem
 				matchedDishes = append(matchedDishes, dishId)
 			}
 		}
-		rows.Close()
 	} else {
 		var tagsId []int
 		for i := range tags {
 			var id int
-			if err = db.QueryRow(`select tag_id from tags where tag = $1`, tags[i]).Scan(&id); err != nil {
+			if err = db.QueryRow(`
+				select
+				    tag_id
+				from
+				    tags
+				where
+				    tag = $1`,
+				tags[i]).Scan(
+				&id); err != nil {
 				return make([]schemas.Dish, 0)
 			}
 			tagsId = append(tagsId, id)
@@ -218,28 +262,34 @@ func GetDishesShortWithTags(tags []string, rangeBegin int, rangeEnd int) []schem
 
 		var cnt = map[int]int{}
 		for i := range tagsId {
-			rows, err := db.Query(`
-			select
-				dishes_tags.dish_id
-			from
-			    dishes,
-			    dishes_tags
-			where
-			    dishes_tags.tag_id = $1`, tagsId[i])
+			if err := func() error {
+				dishesRows, err := db.Query(`
+					select
+						dishes_tags.dish_id
+					from
+						dishes,
+						dishes_tags
+					where
+						dishes_tags.tag_id = $1`,
+					tagsId[i])
+				if err != nil {
+					return err
+				}
+				defer dishesRows.Close()
 
-			if err != nil {
-				rows.Close()
+				for dishesRows.Next() {
+					var dishId int
+					if err = dishesRows.Scan(
+						&dishId); err != nil {
+						return err
+					}
+					cnt[dishId] += 1
+				}
+
+				return nil
+			}(); err != nil {
 				return make([]schemas.Dish, 0)
 			}
-
-			for rows.Next() {
-				var dishId int
-				if err = rows.Scan(&dishId); err != nil {
-					return make([]schemas.Dish, 0)
-				}
-				cnt[dishId] += 1
-			}
-			rows.Close()
 		}
 
 		for id, matched := range cnt {
@@ -261,11 +311,10 @@ func GetDishesShortWithTags(tags []string, rangeBegin int, rangeEnd int) []schem
 
 	dishes := make([]schemas.Dish, 0)
 	for id := range matchedDishes {
-		dish, err := GetDishShortWithId(id)
+		dish, err := GetDishShortById(id)
 		if err != nil {
 			return make([]schemas.Dish, 0)
 		}
-
 		dishes = append(dishes, dish)
 	}
 

@@ -3,34 +3,17 @@ package handlers
 import (
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"strconv"
 	"zakroma_backend/stores"
 )
 
-func GetDishWithId(c *gin.Context) {
-	id, err := strconv.Atoi(c.Params.ByName("id"))
-	if err != nil {
-		c.String(http.StatusBadRequest, err.Error())
+func GetDishByHash(c *gin.Context) {
+	hash := c.Params.ByName("hash")
+	if len(hash) == 0 {
+		c.String(http.StatusBadRequest, "something bad with field 'hash'")
 		return
 	}
 
-	dish, err := stores.GetDishWithId(id)
-	if err != nil {
-		c.String(http.StatusBadRequest, err.Error())
-		return
-	}
-
-	c.JSON(http.StatusOK, dish)
-}
-
-func GetDishShortWithId(c *gin.Context) {
-	id, err := strconv.Atoi(c.Params.ByName("id"))
-	if err != nil {
-		c.String(http.StatusBadRequest, err.Error())
-		return
-	}
-
-	dish, err := stores.GetDishShortWithId(id)
+	dish, err := stores.GetDishByHash(hash)
 	if err != nil {
 		c.String(http.StatusNotFound, err.Error())
 		return
@@ -39,7 +22,23 @@ func GetDishShortWithId(c *gin.Context) {
 	c.JSON(http.StatusOK, dish)
 }
 
-func GetDishesShortWithName(c *gin.Context) {
+func GetDishShortByHash(c *gin.Context) {
+	hash := c.Params.ByName("hash")
+	if len(hash) == 0 {
+		c.String(http.StatusBadRequest, "something bad with field 'hash'")
+		return
+	}
+
+	dishShort, err := stores.GetDishShortByHash(hash)
+	if err != nil {
+		c.String(http.StatusNotFound, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, dishShort)
+}
+
+func GetDishesShortByName(c *gin.Context) {
 	type RequestBody struct {
 		Name       string `json:"name"`
 		RangeBegin int    `json:"range-begin"`
@@ -48,16 +47,17 @@ func GetDishesShortWithName(c *gin.Context) {
 
 	var requestBody RequestBody
 	if err := c.BindJSON(&requestBody); err != nil {
-		c.String(http.StatusBadRequest, err.Error())
+		c.String(http.StatusBadRequest, "request body does not match the protocol")
 		return
 	}
 
-	dishes := stores.GetDishesShortWithName(requestBody.Name, requestBody.RangeBegin, requestBody.RangeEnd)
+	dishes := stores.GetDishesShortByName(requestBody.Name,
+		requestBody.RangeBegin, requestBody.RangeEnd)
 
 	c.JSON(http.StatusOK, dishes)
 }
 
-func GetDishesShortWithTags(c *gin.Context) {
+func GetDishesShortByTags(c *gin.Context) {
 	type RequestBody struct {
 		Tags       []string `json:"tags"`
 		RangeBegin int      `json:"range-begin"`
@@ -66,15 +66,12 @@ func GetDishesShortWithTags(c *gin.Context) {
 
 	var requestBody RequestBody
 	if err := c.BindJSON(&requestBody); err != nil {
-		c.String(http.StatusBadRequest, err.Error())
+		c.String(http.StatusBadRequest, "request body does not match the protocol")
 		return
 	}
 
-	tags := requestBody.Tags
-	rangeBegin := requestBody.RangeBegin
-	rangeEnd := requestBody.RangeEnd
-
-	dishes := stores.GetDishesShortWithTags(tags, rangeBegin, rangeEnd)
+	dishes := stores.GetDishesShortWithTags(requestBody.Tags,
+		requestBody.RangeBegin, requestBody.RangeEnd)
 
 	c.JSON(http.StatusOK, dishes)
 }
