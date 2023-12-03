@@ -7,16 +7,16 @@ import (
 	"zakroma_backend/stores"
 )
 
-func GetProductWithId(c *gin.Context) {
+func GetProductById(c *gin.Context) {
 	id, err := strconv.Atoi(c.Params.ByName("id"))
 	if err != nil {
 		c.String(http.StatusBadRequest, err.Error())
 		return
 	}
 
-	product, err := stores.GetProductWithId(id)
+	product, err := stores.GetProductById(id)
 	if err != nil {
-		c.String(http.StatusBadRequest, err.Error())
+		c.String(http.StatusNotFound, err.Error())
 		return
 	}
 
