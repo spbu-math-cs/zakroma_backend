@@ -32,12 +32,14 @@ func CreateMeal(c *gin.Context) {
 	var requestBody RequestBody
 	if err := c.BindJSON(&requestBody); err != nil {
 		c.String(http.StatusBadRequest, "request body does not match the protocol")
+		return
 	}
 
 	hash, err := stores.CreateMeal(requestBody.DietHash,
 		requestBody.DayDietIndex, requestBody.Name)
 	if err != nil {
 		c.String(http.StatusInternalServerError, err.Error())
+		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{"hash": hash})
@@ -53,12 +55,14 @@ func AddMealDish(c *gin.Context) {
 	var requestBody RequestBody
 	if err := c.BindJSON(&requestBody); err != nil {
 		c.String(http.StatusBadRequest, "request body does not match the protocol")
+		return
 	}
 
 	err := stores.AddMealDish(requestBody.MealHash,
 		requestBody.DishHash, requestBody.Portions)
 	if err != nil {
 		c.String(http.StatusInternalServerError, err.Error())
+		return
 	}
 
 	c.Status(http.StatusOK)

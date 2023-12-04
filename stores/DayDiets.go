@@ -1,6 +1,8 @@
 package stores
 
-import "zakroma_backend/schemas"
+import (
+	"zakroma_backend/schemas"
+)
 
 func GetDayDietId(dietId int, index int) (int, error) {
 	db, err := CreateConnection()
@@ -42,14 +44,12 @@ func GetDayDietById(id int) (schemas.DayDiet, error) {
 		    diet_day_id = $1`,
 		id).Scan(
 		&dayDiet.Name); err != nil {
-		return schemas.DayDiet{}, nil
+		return schemas.DayDiet{}, err
 	}
 
-	mealsRows, err := db.Query(`
+	mealsIdRows, err := db.Query(`
 		select
-			diet_day_meals.meal_id,
-			meals.meal_name,
-			index
+			diet_day_meals.meal_id
 		from
 			diet_day_meals,
 			meals
@@ -62,14 +62,16 @@ func GetDayDietById(id int) (schemas.DayDiet, error) {
 	if err != nil {
 		return schemas.DayDiet{}, err
 	}
-	defer mealsRows.Close()
+	defer mealsIdRows.Close()
 
-	for mealsRows.Next() {
-		var meal schemas.Meal
-		if err = mealsRows.Scan(
-			&meal.Id,
-			&meal.Name,
-			&meal.Index); err != nil {
+	for mealsIdRows.Next() {
+		var mealId int
+		if err = mealsIdRows.Scan(
+			&mealId); err != nil {
+			return schemas.DayDiet{}, err
+		}
+		meal, err := GetMealById(mealId)
+		if err != nil {
 			return schemas.DayDiet{}, err
 		}
 		dayDiet.Meals = append(dayDiet.Meals, meal)

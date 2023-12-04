@@ -84,7 +84,7 @@ func GetDietByHash(hash string) (schemas.Diet, error) {
 
 		dayDiet.Index = index
 		dayDiet.MealsAmount = len(dayDiet.Meals)
-		dayDiet.Meals = dayDiet.Meals[:3]
+		dayDiet.Meals = dayDiet.Meals[:min(3, len(dayDiet.Meals))]
 
 		diet.DayDiets = append(diet.DayDiets, dayDiet)
 	}
