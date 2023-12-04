@@ -46,7 +46,8 @@ CREATE TABLE "tags_for_dishes" (
 CREATE TABLE "meals" (
   "meal_id" serial PRIMARY KEY,
   "meal_name" varchar(64),
-  "meal_hash" varchar(64)
+  "meal_hash" varchar(64),
+  "tag_id" integer
 );
 
 CREATE TABLE "meals_dishes" (
@@ -126,12 +127,6 @@ CREATE TABLE "diet_day" (
   "diet_day_name" varchar(64)
 );
 
-CREATE TABLE "meals_tags" (
-  "meal_id" integer,
-  "tag_id" integer,
-  PRIMARY KEY ("meal_id", "tag_id")
-);
-
 CREATE TABLE "tags_for_meals" (
   "tag_id" serial PRIMARY KEY,
   "tag" varchar(32)
@@ -190,8 +185,6 @@ ALTER TABLE "diet_day_meals" ADD FOREIGN KEY ("diet_day_id") REFERENCES "diet_da
 
 ALTER TABLE "diet_tags" ADD FOREIGN KEY ("tag_id") REFERENCES "tags_for_diet" ("tag_id");
 
-ALTER TABLE "meals_tags" ADD FOREIGN KEY ("tag_id") REFERENCES "tags_for_meals" ("tag_id");
-
-ALTER TABLE "meals_tags" ADD FOREIGN KEY ("meal_id") REFERENCES "meals" ("meal_id");
-
 ALTER TABLE "diet_tags" ADD FOREIGN KEY ("diet_id") REFERENCES "diet" ("diet_id");
+
+ALTER TABLE "meals" ADD FOREIGN KEY ("tag_id") REFERENCES "tags_for_meals" ("tag_id");
