@@ -34,7 +34,6 @@ func main() {
 
 	routing.DishesRouting(api.Group("/dishes"))
 	routing.ProductsRouting(api.Group("/products"))
-
 	routing.DietsRouting(api.Group("/diets"))
 	routing.MealsRouting(api.Group("/meals"))
 

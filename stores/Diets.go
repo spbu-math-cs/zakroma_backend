@@ -1,7 +1,6 @@
 package stores
 
 import (
-	"fmt"
 	"zakroma_backend/schemas"
 	"zakroma_backend/utils"
 )
@@ -78,7 +77,6 @@ func GetDietByHash(hash string) (schemas.Diet, error) {
 			&index); err != nil {
 			return schemas.Diet{}, err
 		}
-		fmt.Println(dayDietId, index)
 		dayDiet, err := GetDayDietById(dayDietId)
 		if err != nil {
 			return schemas.Diet{}, err

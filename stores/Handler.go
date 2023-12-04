@@ -2,7 +2,6 @@ package stores
 
 import (
 	"database/sql"
-	"fmt"
 	_ "github.com/lib/pq" // postgres golang driver
 )
 
@@ -21,7 +20,6 @@ func CreateConnection() (*sql.DB, error) {
 		return nil, err
 	}
 
-	fmt.Println("Successfully connected!")
 	// return the connection
 	return db, nil
 }

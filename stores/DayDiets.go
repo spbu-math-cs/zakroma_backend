@@ -1,7 +1,6 @@
 package stores
 
 import (
-	"fmt"
 	"zakroma_backend/schemas"
 )
 
@@ -45,11 +44,8 @@ func GetDayDietById(id int) (schemas.DayDiet, error) {
 		    diet_day_id = $1`,
 		id).Scan(
 		&dayDiet.Name); err != nil {
-		fmt.Println(err.Error())
 		return schemas.DayDiet{}, err
 	}
-
-	fmt.Println(dayDiet.Name)
 
 	mealsIdRows, err := db.Query(`
 		select
@@ -68,15 +64,12 @@ func GetDayDietById(id int) (schemas.DayDiet, error) {
 	}
 	defer mealsIdRows.Close()
 
-	fmt.Println("go")
-
 	for mealsIdRows.Next() {
 		var mealId int
 		if err = mealsIdRows.Scan(
 			&mealId); err != nil {
 			return schemas.DayDiet{}, err
 		}
-		fmt.Println(mealId)
 		meal, err := GetMealById(mealId)
 		if err != nil {
 			return schemas.DayDiet{}, err
