@@ -41,3 +41,23 @@ func CreateDiet(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"hash": hash})
 }
+
+func GetCurrentDiet(c *gin.Context) {
+	type RequestBody struct {
+		GroupId int `json:"group-id"`
+	}
+
+	var requestBody RequestBody
+	if err := c.BindJSON(&requestBody); err != nil {
+		c.String(http.StatusBadRequest, "request body does not match the protocol")
+		return
+	}
+
+	diet, err := stores.GetCurrentDiet(requestBody.GroupId)
+	if err != nil {
+		c.String(http.StatusNotFound, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, diet)
+}
