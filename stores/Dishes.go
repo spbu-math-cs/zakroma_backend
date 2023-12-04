@@ -33,7 +33,7 @@ func GetDishByHash(hash string) (schemas.Dish, error) {
 		return schemas.Dish{}, err
 	}
 
-	dish, err := GetDishShortByHash(hash)
+	dish, err := GetDishShortWithRecipeByHash(hash)
 	if err != nil {
 		return schemas.Dish{}, err
 	}
@@ -86,8 +86,7 @@ func GetDishShortByHash(hash string) (schemas.Dish, error) {
     		calories,
     		proteins,
     		fats,
-    		carbs,
-    		recipe
+    		carbs
 		from
 			dishes
 		where
@@ -99,8 +98,7 @@ func GetDishShortByHash(hash string) (schemas.Dish, error) {
 		&dish.Calories,
 		&dish.Proteins,
 		&dish.Fats,
-		&dish.Carbs,
-		&dish.Recipe); err != nil {
+		&dish.Carbs); err != nil {
 		return schemas.Dish{}, err
 	}
 
@@ -122,13 +120,47 @@ func GetDishShortById(id int) (schemas.Dish, error) {
     		calories,
     		proteins,
     		fats,
-    		carbs,
-    		recipe
+    		carbs
 		from
 			dishes
 		where
 			dish_id = $1`,
 		id).Scan(
+		&dish.Id,
+		&dish.Hash,
+		&dish.Name,
+		&dish.Calories,
+		&dish.Proteins,
+		&dish.Fats,
+		&dish.Carbs); err != nil {
+		return schemas.Dish{}, err
+	}
+
+	return dish, nil
+}
+
+func GetDishShortWithRecipeByHash(hash string) (schemas.Dish, error) {
+	db, err := CreateConnection()
+	if err != nil {
+		return schemas.Dish{}, err
+	}
+
+	var dish schemas.Dish
+	if err = db.QueryRow(`
+		select
+		    dish_id,
+		    dish_hash,
+    		dish_name,
+    		calories,
+    		proteins,
+    		fats,
+    		carbs,
+    		recipe
+		from
+			dishes
+		where
+			dish_hash = $1`,
+		hash).Scan(
 		&dish.Id,
 		&dish.Hash,
 		&dish.Name,
@@ -196,8 +228,8 @@ func GetDishesShortByName(name string, rangeBegin int, rangeEnd int) []schemas.D
 	}
 
 	dishes := make([]schemas.Dish, 0)
-	for id := range matchedDishes {
-		dish, err := GetDishShortById(id)
+	for i := range matchedDishes {
+		dish, err := GetDishShortById(matchedDishes[i])
 		if err != nil {
 			return make([]schemas.Dish, 0)
 		}
@@ -207,7 +239,7 @@ func GetDishesShortByName(name string, rangeBegin int, rangeEnd int) []schemas.D
 	return dishes
 }
 
-func GetDishesShortWithTags(tags []string, rangeBegin int, rangeEnd int) []schemas.Dish {
+func GetDishesShortByTags(tags []string, rangeBegin int, rangeEnd int) []schemas.Dish {
 	db, err := CreateConnection()
 	if err != nil {
 		return make([]schemas.Dish, 0)
@@ -221,7 +253,9 @@ func GetDishesShortWithTags(tags []string, rangeBegin int, rangeEnd int) []schem
 			select
 				dish_id
 			from
-			    dishes`)
+			    dishes
+			order by
+			    dish_id`)
 		if err != nil {
 			return make([]schemas.Dish, 0)
 		}
@@ -265,7 +299,7 @@ func GetDishesShortWithTags(tags []string, rangeBegin int, rangeEnd int) []schem
 			if err := func() error {
 				dishesRows, err := db.Query(`
 					select
-						dishes_tags.dish_id
+						distinct(dishes_tags.dish_id)
 					from
 						dishes,
 						dishes_tags
@@ -305,13 +339,11 @@ func GetDishesShortWithTags(tags []string, rangeBegin int, rangeEnd int) []schem
 		}
 	}
 
-	sort.Slice(matchedDishes, func(i int, j int) bool {
-		return i < j
-	})
+	sort.Ints(matchedDishes)
 
 	dishes := make([]schemas.Dish, 0)
-	for id := range matchedDishes {
-		dish, err := GetDishShortById(id)
+	for i := range matchedDishes {
+		dish, err := GetDishShortById(matchedDishes[i])
 		if err != nil {
 			return make([]schemas.Dish, 0)
 		}

@@ -70,7 +70,7 @@ func GetDishesShortByTags(c *gin.Context) {
 		return
 	}
 
-	dishes := stores.GetDishesShortWithTags(requestBody.Tags,
+	dishes := stores.GetDishesShortByTags(requestBody.Tags,
 		requestBody.RangeBegin, requestBody.RangeEnd)
 
 	c.JSON(http.StatusOK, dishes)

@@ -4,7 +4,6 @@ import (
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
-	"zakroma_backend/middleware"
 	"zakroma_backend/routing"
 )
 
@@ -36,9 +35,8 @@ func main() {
 	routing.DishesRouting(api.Group("/dishes"))
 	routing.ProductsRouting(api.Group("/products"))
 
-	routing.DietsRouting(api.Group("/diets", middleware.Auth))
-	routing.DayDietsRouting(api.Group("/diets/day", middleware.Auth))
-	routing.MealsRouting(api.Group("/meals", middleware.Auth))
+	routing.DietsRouting(api.Group("/diets"))
+	routing.MealsRouting(api.Group("/meals"))
 
 	runHttp(router)
 }
