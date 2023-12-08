@@ -22,30 +22,52 @@ func Login(c *gin.Context) {
 	var user schemas.User
 	err := c.BindJSON(&user)
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-			"message": err.Error(),
-		})
+		c.String(http.StatusBadRequest, err.Error())
 		return
 	}
 
-	id, err := stores.ValidateUser(user.Username, user.Password)
+	user.Id, err = stores.Login(user)
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-			"message": err.Error(),
-		})
+		c.String(http.StatusUnauthorized, err.Error())
+		return
+	}
+
+	session := sessions.Default(c)
+	session.Set("id", user.Id)
+	if err := session.Save(); err != nil {
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	token, err := generateToken(user.Email)
+
+	c.JSON(http.StatusOK, gin.H{
+		"token": token,
+	})
+}
+
+func Register(c *gin.Context) {
+	var user schemas.User
+	err := c.BindJSON(&user)
+	if err != nil {
+		c.String(http.StatusBadRequest, err.Error())
+		return
+	}
+
+	id, err := stores.Register(user)
+	if err != nil {
+		c.String(http.StatusUnauthorized, err.Error())
 		return
 	}
 
 	session := sessions.Default(c)
 	session.Set("id", id)
 	if err := session.Save(); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Failed to save session",
-		})
+		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	token, err := generateToken(user.Username)
+	token, err := generateToken(user.Email)
 
 	c.JSON(http.StatusOK, gin.H{
 		"token": token,

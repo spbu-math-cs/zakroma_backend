@@ -6,33 +6,84 @@ import (
 	"zakroma_backend/schemas"
 )
 
-func ValidateUser(username string, password string) (int, error) {
+func Login(user schemas.User) (int, error) {
 	db, err := CreateConnection()
 	if err != nil {
 		return -1, err
 	}
 
-	var user schemas.User
-	err = db.QueryRow(`
+	var hashedPassword string
+	if err = db.QueryRow(`
 		select
 			user_id,
-			user_name,
 			password_hash
 		from
 			users
 		where
-			user_name = $1`,
-		username).Scan(
+			email = $1`,
+		user.Email).Scan(
 		&user.Id,
-		&user.Username,
-		&user.Password)
+		&hashedPassword); err != nil {
+		return -1, nil
+	}
 
+	if err = bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(user.Password)); err != nil {
+		return -1, fmt.Errorf("wrong password")
+	}
+
+	return user.Id, nil
+}
+
+func Register(user schemas.User) (int, error) {
+	db, err := CreateConnection()
 	if err != nil {
 		return -1, err
 	}
 
-	if err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
-		return -1, fmt.Errorf("wrong password")
+	usersRows, err := db.Query(`
+		select
+			user_id
+		from
+			users
+		where
+			email = $1`,
+		user.Email)
+	if err != nil {
+		return -1, nil
+	}
+	defer usersRows.Close()
+
+	user.Id = -1
+	for usersRows.Next() {
+		if err = usersRows.Scan(
+			&user.Id); err != nil {
+			return -1, nil
+		}
+	}
+
+	if user.Id != -1 {
+		return -1, fmt.Errorf("User with email = '%s' already exists", user.Email)
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return -1, err
+	}
+
+	if err = db.QueryRow(`
+		insert into
+			users(password_hash, user_name, user_surname, email, birth_date)
+		values
+			($1, $2, $3, $4, CAST($5 as DATE))
+		returning
+			user_id`,
+		hashedPassword,
+		user.Name,
+		user.Surname,
+		user.Email,
+		user.BirthDate).Scan(
+		&user.Id); err != nil {
+		return -1, err
 	}
 
 	return user.Id, nil
