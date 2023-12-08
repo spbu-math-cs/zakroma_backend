@@ -61,3 +61,23 @@ func GetCurrentDiet(c *gin.Context) {
 
 	c.JSON(http.StatusOK, diet)
 }
+
+func ChangeDietName(c *gin.Context) {
+	type RequestBody struct {
+		DietHash string `json:"diet-hash"`
+		Name     string `json:"name"`
+	}
+
+	var requestBody RequestBody
+	if err := c.BindJSON(&requestBody); err != nil {
+		c.String(http.StatusBadRequest, "request body does not match the protocol")
+		return
+	}
+
+	if err := stores.ChangeDietName(requestBody.DietHash, requestBody.Name); err != nil {
+		c.String(http.StatusNotFound, err.Error())
+		return
+	}
+
+	c.Status(http.StatusOK)
+}

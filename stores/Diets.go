@@ -211,3 +211,27 @@ func GetCurrentDiet(groupId int) (schemas.Diet, error) {
 
 	return diet, nil
 }
+
+func ChangeDietName(dietHash string, name string) error {
+	db, err := CreateConnection()
+	if err != nil {
+		return err
+	}
+
+	if err := db.QueryRow(`
+		update
+			diet
+		set
+		    diet_name = $2
+		where
+		    hash = $1
+		returning
+			hash`,
+		dietHash,
+		name).Scan(
+		&dietHash); err != nil {
+		return err
+	}
+
+	return nil
+}
