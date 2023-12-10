@@ -86,7 +86,7 @@ CREATE TABLE "products" (
 CREATE TABLE "products_dishes" (
   "product_id" integer,
   "dish_id" integer,
-  "amount" integer,
+  "amount" numeric,
   PRIMARY KEY ("product_id", "dish_id")
 );
 
