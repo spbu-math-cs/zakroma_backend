@@ -18,7 +18,7 @@ func GetDietIdByHash(hash string) (int, error) {
 		from
 			diet
 		where
-			hash = $1`,
+			diet_hash = $1`,
 		hash).Scan(
 		&dietId)
 	if err != nil {
@@ -38,12 +38,12 @@ func GetDietByHash(hash string) (schemas.Diet, error) {
 	err = db.QueryRow(`
 		select
 			diet_id,
-			hash,
+			diet_hash,
 			diet_name
 		from
 			diet
 		where
-			hash = $1`,
+			diet_hash = $1`,
 		hash).Scan(
 		&diet.Id,
 		&diet.Hash,
@@ -102,7 +102,7 @@ func GetDietById(id int) (schemas.Diet, error) {
 	err = db.QueryRow(`
 		select
 			diet_id,
-			hash,
+			diet_hash,
 			diet_name
 		from
 			diet
@@ -172,7 +172,7 @@ func CreateDiet(name string) (string, error) {
 	id := -1
 	if err = db.QueryRow(`
 		insert into
-			diet(diet_name, hash)
+			diet(diet_name, diet_hash)
 		values
 			($1, $2)
 		returning
@@ -224,9 +224,9 @@ func ChangeDietName(dietHash string, name string) error {
 		set
 		    diet_name = $2
 		where
-		    hash = $1
+		    diet_hash = $1
 		returning
-			hash`,
+			diet_hash`,
 		dietHash,
 		name).Scan(
 		&dietHash); err != nil {

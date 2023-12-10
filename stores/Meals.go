@@ -168,7 +168,7 @@ func GetMealById(id int) (schemas.Meal, error) {
 	return meal, nil
 }
 
-func CreateMealByName(dietHash string, dayDietIndex int, name string) (string, error) {
+func CreateMeal(dietHash string, dayDietIndex int, name string) (string, error) {
 	db, err := CreateConnection()
 	if err != nil {
 		return "", err
@@ -208,22 +208,48 @@ func CreateMealByName(dietHash string, dayDietIndex int, name string) (string, e
 	}
 	mealIndex++
 
+	tags, err := GetAllMealsTags()
+	if err != nil {
+		return "", err
+	}
+
+	tagId := -1
+	for i := range tags {
+		if tags[i].Name == name {
+			tagId = tags[i].TagId
+		}
+	}
+
 	hash, err := utils.GenerateRandomHash(64)
 	if err != nil {
 		return "", err
 	}
 
 	mealId := 0
-	if err = db.QueryRow(`
+	if tagId == -1 {
+		if err = db.QueryRow(`
 		insert into
 			meals(meal_name, meal_hash)
 		values 
 			($1, $2)
 		returning
 			meal_id`,
-		name, hash).Scan(
-		&mealId); err != nil {
-		return "", err
+			name, hash).Scan(
+			&mealId); err != nil {
+			return "", err
+		}
+	} else {
+		if err = db.QueryRow(`
+		insert into
+			meals(tag_id, meal_hash)
+		values 
+			($1, $2)
+		returning
+			meal_id`,
+			tagId, hash).Scan(
+			&mealId); err != nil {
+			return "", err
+		}
 	}
 
 	if err = db.QueryRow(`
@@ -270,79 +296,6 @@ func GetAllMealsTags() ([]schemas.Tag, error) {
 	}
 
 	return tags, nil
-}
-
-func CreateMealByTag(dietHash string, dayDietIndex int, tagId int) (string, error) {
-	db, err := CreateConnection()
-	if err != nil {
-		return "", err
-	}
-
-	dietId, err := GetDietIdByHash(dietHash)
-	if err != nil {
-		return "", err
-	}
-
-	dayDietId, err := GetDayDietId(dietId, dayDietIndex)
-	if err != nil {
-		return "", err
-	}
-
-	mealIndex := -1
-	maxMealRow, err := db.Query(`
-		select
-		    max(index)
-		from
-		    diet_day_meals
-		where
-		    diet_day_id = $1
-		group by
-		    diet_day_id`,
-		dayDietId)
-	if err != nil {
-		return "", err
-	}
-	defer maxMealRow.Close()
-
-	for maxMealRow.Next() {
-		err = maxMealRow.Scan(&mealIndex)
-		if err != nil {
-			return "", err
-		}
-	}
-	mealIndex++
-
-	hash, err := utils.GenerateRandomHash(64)
-	if err != nil {
-		return "", err
-	}
-
-	mealId := 0
-	if err = db.QueryRow(`
-		insert into
-			meals(tag_id, meal_hash)
-		values 
-			($1, $2)
-		returning
-			meal_id`,
-		tagId, hash).Scan(
-		&mealId); err != nil {
-		return "", err
-	}
-
-	if err = db.QueryRow(`
-		insert into
-			diet_day_meals(diet_day_id, meal_id, index)
-		values
-			($1, $2, $3)
-		returning
-			meal_id`,
-		dayDietId, mealId, mealIndex).Scan(
-		&dayDietId); err != nil {
-		return "", err
-	}
-
-	return hash, nil
 }
 
 func AddMealDish(mealHash string, dishHash string, portions int) error {

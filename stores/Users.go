@@ -20,7 +20,7 @@ func Login(user schemas.User) (int, error) {
 		from
 			users
 		where
-			email = $1`,
+			user_email = $1`,
 		user.Email).Scan(
 		&user.Id,
 		&hashedPassword); err != nil {
@@ -46,7 +46,7 @@ func Register(user schemas.User) (int, error) {
 		from
 			users
 		where
-			email = $1`,
+			user_email = $1`,
 		user.Email)
 	if err != nil {
 		return -1, nil
@@ -72,7 +72,7 @@ func Register(user schemas.User) (int, error) {
 
 	if err = db.QueryRow(`
 		insert into
-			users(password_hash, user_name, user_surname, email, birth_date)
+			users(password_hash, user_name, user_surname, user_email, birth_date)
 		values
 			($1, $2, $3, $4, CAST($5 as DATE))
 		returning
