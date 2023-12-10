@@ -20,6 +20,7 @@ services:
       - ./database/load_all.sql:/docker-entrypoint-initdb.d/load_all.sql
 
   zakroma_backend:
+    image: zakroma_backend:latest
     container_name: zakroma_backend
     networks:
       - shared-network
