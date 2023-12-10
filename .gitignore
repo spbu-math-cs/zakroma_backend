@@ -1,1 +1,7 @@
 .idea/
+
+# генерируется запуском cleanup.bash
+database/load_all.sql
+
+#
+*.out.txt
