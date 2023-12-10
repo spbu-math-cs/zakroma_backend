@@ -18,6 +18,10 @@ func generateToken(username string) (string, error) {
 	return token, nil
 }
 
+func Ping(c *gin.Context) {
+	c.Status(http.StatusOK)
+}
+
 func Login(c *gin.Context) {
 	var user schemas.User
 	err := c.BindJSON(&user)
