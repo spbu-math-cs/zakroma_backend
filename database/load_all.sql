@@ -5,7 +5,7 @@
 \ir scripts/3_Groups_table_filling.sql
 \ir scripts/4_Meals_table_filling.sql
 \ir scripts/5_Products_table_filling.sql
-\ir scripts/6_Tags_table_filling.sql
+\ir scripts/6_Tags_for_dishes_table_filling.sql
 \ir scripts/7_Users_table_filling.sql
 \ir scripts/8_Diet_day_table_filling.sql
 \ir scripts/9_Diet_day_diet_table_filling.sql
