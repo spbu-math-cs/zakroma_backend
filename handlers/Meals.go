@@ -22,7 +22,7 @@ func GetMealByHash(c *gin.Context) {
 	c.JSON(http.StatusOK, meal)
 }
 
-func CreateMeal(c *gin.Context) {
+func CreateMealByName(c *gin.Context) {
 	type RequestBody struct {
 		DietHash     string `json:"diet-hash"`
 		DayDietIndex int    `json:"day-diet-index"`
@@ -35,8 +35,41 @@ func CreateMeal(c *gin.Context) {
 		return
 	}
 
-	hash, err := stores.CreateMeal(requestBody.DietHash,
+	hash, err := stores.CreateMealByName(requestBody.DietHash,
 		requestBody.DayDietIndex, requestBody.Name)
+	if err != nil {
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"hash": hash})
+}
+
+func GetAllMealsTags(c *gin.Context) {
+	tags, err := stores.GetAllMealsTags()
+	if err != nil {
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, tags)
+}
+
+func CreateMealByTag(c *gin.Context) {
+	type RequestBody struct {
+		DietHash     string `json:"diet-hash"`
+		DayDietIndex int    `json:"day-diet-index"`
+		TagId        int    `json:"tag-id"`
+	}
+
+	var requestBody RequestBody
+	if err := c.BindJSON(&requestBody); err != nil {
+		c.String(http.StatusBadRequest, "request body does not match the protocol")
+		return
+	}
+
+	hash, err := stores.CreateMealByTag(requestBody.DietHash,
+		requestBody.DayDietIndex, requestBody.TagId)
 	if err != nil {
 		c.String(http.StatusInternalServerError, err.Error())
 		return

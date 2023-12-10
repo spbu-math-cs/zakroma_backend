@@ -284,7 +284,7 @@ func GetDishesShortByTags(tags []string, rangeBegin int, rangeEnd int) []schemas
 				select
 				    tag_id
 				from
-				    tags
+				    tags_for_dishes
 				where
 				    tag = $1`,
 				tags[i]).Scan(
