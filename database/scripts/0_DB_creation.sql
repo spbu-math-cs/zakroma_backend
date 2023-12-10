@@ -1,6 +1,8 @@
 CREATE TABLE "users" (
   "user_id" serial PRIMARY KEY,
   "user_name" varchar(32),
+  "user_surname" varchar(32),
+  "user_email" varchar(64),
   "password_hash" varchar(64),
   "birth_date" date,
   "user_hash" varchar(64)

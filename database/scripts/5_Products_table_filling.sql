@@ -1,3 +1,8 @@
+ALTER SEQUENCE products_product_id_seq RESTART WITH 1;
+
+insert into products
+values (0, 'Яблоко', 0.4, 9.8, 0.4, 47, 'piece');
+
 insert into products (product_name, proteins, carbs, fats, calories, unit_of_measurement)
 values ('Яблоко', 0.4, 9.8, 0.4, 47, 'piece'),
        ('Банан', 1.5, 21.8, 0.2, 95, 'piece'),
