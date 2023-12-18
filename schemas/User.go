@@ -2,6 +2,7 @@ package schemas
 
 type User struct {
 	Id        int    `json:"id"`
+	Hash      string `json:"hash"`
 	Password  string `json:"password"`
 	Email     string `json:"email"`
 	Name      string `json:"name"`

@@ -30,14 +30,14 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	user.Id, err = stores.Login(user)
+	user.Hash, err = stores.Login(user)
 	if err != nil {
 		c.String(http.StatusUnauthorized, err.Error())
 		return
 	}
 
 	session := sessions.Default(c)
-	session.Set("id", user.Id)
+	session.Set("hash", user.Hash)
 	if err := session.Save(); err != nil {
 		c.String(http.StatusInternalServerError, err.Error())
 		return
@@ -58,14 +58,14 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	id, err := stores.Register(user)
+	user.Hash, err = stores.Register(user)
 	if err != nil {
 		c.String(http.StatusUnauthorized, err.Error())
 		return
 	}
 
 	session := sessions.Default(c)
-	session.Set("id", id)
+	session.Set("hash", user.Hash)
 	if err := session.Save(); err != nil {
 		c.String(http.StatusInternalServerError, err.Error())
 		return
