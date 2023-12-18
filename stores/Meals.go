@@ -35,28 +35,44 @@ func GetMealByHash(hash string) (schemas.Meal, error) {
 	}
 
 	var meal schemas.Meal
-	var tag string
+	var tagId int
 	err = db.QueryRow(`
 		select
 			meals.meal_id,
 			meals.meal_hash,
 			meals.meal_name,
-			tags_for_meals.tag
+			case
+			    when meals.tag_id is null
+			        then -1
+				else
+					meals.tag_id
+			end
 		from
-			meals,
-			tags_for_meals
+			meals
 		where
-			meals.meal_hash = $1 and
-			meals.tag_id = tags_for_meals.tag_id`,
+			meals.meal_hash = $1`,
 		hash).Scan(
 		&meal.Id,
 		&meal.Hash,
 		&meal.Name,
-		&tag)
+		&tagId)
 	if err != nil {
 		return schemas.Meal{}, err
 	}
 	if len(meal.Name) == 0 {
+		var tag string
+		err = db.QueryRow(`
+			select
+				tag
+			from
+				tags_for_dishes
+			where
+				tag_id = $1`,
+			tagId).Scan(
+			&tag)
+		if err != nil {
+			return schemas.Meal{}, err
+		}
 		meal.Name = tag
 	}
 
