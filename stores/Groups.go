@@ -1,6 +1,8 @@
 package stores
 
-func GetCurrentDietId(groupId int) (int, error) {
+import "zakroma_backend/utils"
+
+func GetCurrentDietId(groupHash string) (int, error) {
 	db, err := CreateConnection()
 	if err != nil {
 		return -1, err
@@ -13,11 +15,111 @@ func GetCurrentDietId(groupId int) (int, error) {
 		from
 		    groups
 		where
-		    group_id = $1`,
-		groupId).Scan(
+		    group_hash = $1`,
+		groupHash).Scan(
 		&currentDietId); err != nil {
 		return -1, err
 	}
 
 	return currentDietId, nil
+}
+
+func GetGroupIdByHash(groupHash string) (int, error) {
+	db, err := CreateConnection()
+	if err != nil {
+		return -1, err
+	}
+
+	var id int
+	if err = db.QueryRow(`
+		select
+		    group_id
+		from
+		    groups
+		where
+		    group_hash = $1`,
+		groupHash).Scan(
+		&id); err != nil {
+		return -1, err
+	}
+
+	return id, nil
+}
+
+func AddGroupDiet(groupHash string, dietId int) error {
+	db, err := CreateConnection()
+	if err != nil {
+		return err
+	}
+
+	groupId, err := GetGroupIdByHash(groupHash)
+	if err != nil {
+		return err
+	}
+
+	if err = db.QueryRow(`
+		insert into
+			groups_diets(group_id, diet_id)
+		values
+			($1, $2)
+		returning
+			group_id`,
+		groupId,
+		dietId).Scan(
+		&groupId); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func CreateGroup(name string) (string, error) {
+	db, err := CreateConnection()
+	if err != nil {
+		return "", err
+	}
+
+	hash, err := utils.GenerateRandomHash(64)
+	if err != nil {
+		return "", err
+	}
+
+	var id int
+	if err = db.QueryRow(`
+		insert into
+			groups(group_name, group_hash)
+		values
+			($1, $2)
+		returning
+			group_id`,
+		name,
+		hash).Scan(
+		&id); err != nil {
+		return "", err
+	}
+
+	return hash, nil
+}
+
+func CreatePersonalGroup(hash string) (string, error) {
+	db, err := CreateConnection()
+	if err != nil {
+		return "", err
+	}
+
+	var id int
+	if err = db.QueryRow(`
+		insert into
+			groups(group_name, group_hash)
+		values
+			($1, $2, $3)
+		returning
+			group_id`,
+		"Личная группа",
+		hash).Scan(
+		&id); err != nil {
+		return "", err
+	}
+
+	return hash, nil
 }
