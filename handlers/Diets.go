@@ -24,7 +24,8 @@ func GetDietByHash(c *gin.Context) {
 
 func CreateDiet(c *gin.Context) {
 	type RequestBody struct {
-		Name string `json:"name"`
+		Name      string `json:"name"`
+		GroupHash string `json:"group-hash"`
 	}
 
 	var requestBody RequestBody
@@ -33,7 +34,7 @@ func CreateDiet(c *gin.Context) {
 		return
 	}
 
-	hash, err := stores.CreateDiet(requestBody.Name)
+	hash, err := stores.CreateDiet(requestBody.Name, requestBody.GroupHash)
 	if err != nil {
 		c.String(http.StatusInternalServerError, err.Error())
 		return
@@ -44,7 +45,7 @@ func CreateDiet(c *gin.Context) {
 
 func GetCurrentDiet(c *gin.Context) {
 	type RequestBody struct {
-		GroupId int `json:"group-id"`
+		GroupHash string `json:"group-hash"`
 	}
 
 	var requestBody RequestBody
@@ -53,7 +54,7 @@ func GetCurrentDiet(c *gin.Context) {
 		return
 	}
 
-	diet, err := stores.GetCurrentDiet(requestBody.GroupId)
+	diet, err := stores.GetCurrentDiet(requestBody.GroupHash)
 	if err != nil {
 		c.String(http.StatusNotFound, err.Error())
 		return

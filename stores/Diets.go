@@ -158,7 +158,7 @@ func GetDietById(id int) (schemas.Diet, error) {
 
 var DefaultDayDietName = [7]string{"Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"}
 
-func CreateDiet(name string) (string, error) {
+func CreateDiet(name string, groupHash string) (string, error) {
 	db, err := CreateConnection()
 	if err != nil {
 		return "", err
@@ -185,15 +185,19 @@ func CreateDiet(name string) (string, error) {
 	for index := 0; index < 7; index++ {
 		_, err := CreateDayDiet(id, index, DefaultDayDietName[index])
 		if err != nil {
-			return "", nil
+			return "", err
 		}
+	}
+
+	if err = AddGroupDiet(groupHash, id); err != nil {
+		return "", err
 	}
 
 	return hash, nil
 }
 
-func GetCurrentDiet(groupId int) (schemas.Diet, error) {
-	dietId, err := GetCurrentDietId(groupId)
+func GetCurrentDiet(groupHash string) (schemas.Diet, error) {
+	dietId, err := GetCurrentDietId(groupHash)
 	if err != nil {
 		return schemas.Diet{}, err
 	}
