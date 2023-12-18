@@ -95,3 +95,25 @@ func Register(user schemas.User) (string, error) {
 
 	return user.Hash, nil
 }
+
+func GetUserIdByHash(hash string) (int, error) {
+	db, err := CreateConnection()
+	if err != nil {
+		return -1, err
+	}
+
+	id := -1
+	if err = db.QueryRow(`
+		select
+		    user_id
+		from
+		    users
+		where
+		    user_hash = $1`,
+		hash).Scan(
+		&id); err != nil {
+		return -1, err
+	}
+
+	return id, nil
+}

@@ -1,6 +1,9 @@
 package stores
 
-import "zakroma_backend/utils"
+import (
+	"zakroma_backend/schemas"
+	"zakroma_backend/utils"
+)
 
 func GetCurrentDietId(groupHash string) (int, error) {
 	db, err := CreateConnection()
@@ -122,4 +125,47 @@ func CreatePersonalGroup(hash string) (string, error) {
 	}
 
 	return hash, nil
+}
+
+func GetAllUserGroups(userHash string) ([]schemas.Group, error) {
+	userId, err := GetUserIdByHash(userHash)
+	if err != nil {
+		return []schemas.Group{}, err
+	}
+
+	db, err := CreateConnection()
+	if err != nil {
+		return []schemas.Group{}, err
+	}
+
+	rows, err := db.Query(`
+		select
+		    users_groups.group_id,
+		    groups.group_hash,
+		    groups.group_name
+		from
+		    users_groups,
+		    groups
+		where
+		    users_groups.user_id = $1 and
+		    users_groups.group_id = groups.group_id`,
+		userId)
+	if err != nil {
+		return []schemas.Group{}, err
+	}
+	defer rows.Close()
+
+	var groups []schemas.Group
+	for rows.Next() {
+		var group schemas.Group
+		if err = rows.Scan(
+			&group.Id,
+			&group.Hash,
+			&group.Name); err != nil {
+			return []schemas.Group{}, err
+		}
+		groups = append(groups, group)
+	}
+
+	return groups, nil
 }
