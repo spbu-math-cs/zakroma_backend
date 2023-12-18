@@ -16,8 +16,7 @@ services:
     ports:
       - ${DB_PORT}:${DB_PORT}
     volumes:
-      - ./database/scripts:/docker-entrypoint-initdb.d/scripts # wont execute subdirectories scripts
-      - ./database/load_all.sql:/docker-entrypoint-initdb.d/load_all.sql
+      - ./database/scripts/:/docker-entrypoint-initdb.d # initdb scripts 
 
   zakroma_backend:
     image: zakroma_backend:latest
