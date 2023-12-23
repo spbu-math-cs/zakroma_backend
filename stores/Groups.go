@@ -1,6 +1,7 @@
 package stores
 
 import (
+	"fmt"
 	"zakroma_backend/schemas"
 	"zakroma_backend/utils"
 )
@@ -76,7 +77,25 @@ func AddGroupDiet(groupHash string, dietId int) error {
 	return nil
 }
 
-func CreateGroup(name string) (string, error) {
+func AddGroupDietByHash(userHash string, groupHash string, dietHash string) error {
+	userRole, err := GetUserRole(userHash, groupHash)
+	if err != nil {
+		return err
+	}
+
+	if userRole != "Admin" {
+		return fmt.Errorf("no permission")
+	}
+
+	dietId, err := GetDietIdByHash(dietHash)
+	if err != nil {
+		return err
+	}
+
+	return AddGroupDiet(groupHash, dietId)
+}
+
+func CreateGroup(name string, user string) (string, error) {
 	db, err := CreateConnection()
 	if err != nil {
 		return "", err
@@ -101,6 +120,25 @@ func CreateGroup(name string) (string, error) {
 		return "", err
 	}
 
+	userId, err := GetUserIdByHash(user)
+	if err != nil {
+		return "", err
+	}
+
+	if err := db.QueryRow(`
+		insert into
+			users_groups(user_id, group_id, role)
+		values
+			($1, $2, $3)
+		returning
+			user_id`,
+		userId,
+		id,
+		"Admin").Scan(
+		&userId); err != nil {
+		return "", err
+	}
+
 	return hash, nil
 }
 
@@ -121,6 +159,25 @@ func CreatePersonalGroup(hash string) error {
 		"Личная группа",
 		hash).Scan(
 		&id); err != nil {
+		return err
+	}
+
+	userId, err := GetUserIdByHash(hash)
+	if err != nil {
+		return err
+	}
+
+	if err := db.QueryRow(`
+		insert into
+			users_groups(user_id, group_id, role)
+		values
+			($1, $2, $3)
+		returning
+			user_id`,
+		userId,
+		id,
+		"Admin").Scan(
+		&userId); err != nil {
 		return err
 	}
 
@@ -168,4 +225,134 @@ func GetAllUserGroups(userHash string) ([]schemas.Group, error) {
 	}
 
 	return groups, nil
+}
+
+func GetUserRole(userHash string, groupHash string) (string, error) {
+	db, err := CreateConnection()
+	if err != nil {
+		return "", err
+	}
+
+	userId, err := GetUserIdByHash(userHash)
+	if err != nil {
+		return "", err
+	}
+
+	groupId, err := GetGroupIdByHash(groupHash)
+	if err != nil {
+		return "", err
+	}
+
+	var role string
+	if err = db.QueryRow(`
+		select
+		    role
+		from
+		    users_groups
+		where
+		    user_id = $1 and
+		    group_id = $2`,
+		userId,
+		groupId).Scan(
+		&role); err != nil {
+		return "", err
+	}
+
+	return role, nil
+}
+
+func CheckUserGroup(userHash string, groupHash string) error {
+	_, err := GetUserRole(userHash, groupHash)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func AddGroupUser(userHash string, groupHash string, newUserHash string, role string) error {
+	userRole, err := GetUserRole(userHash, groupHash)
+	if err != nil {
+		return err
+	}
+
+	if userRole != "Admin" {
+		return fmt.Errorf("no permission")
+	}
+
+	db, err := CreateConnection()
+	if err != nil {
+		return err
+	}
+
+	userId, err := GetUserIdByHash(newUserHash)
+	if err != nil {
+		return err
+	}
+
+	groupId, err := GetGroupIdByHash(groupHash)
+	if err != nil {
+		return err
+	}
+
+	if err := db.QueryRow(`
+		insert into
+			users_groups(user_id, group_id, role)
+		values
+			($1, $2, $3)
+		returning
+			user_id`,
+		userId,
+		groupId,
+		role).Scan(
+		&userId); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func ChangeRole(userHash string, groupHash string, newUserHash string, role string) error {
+	userRole, err := GetUserRole(userHash, groupHash)
+	if err != nil {
+		return err
+	}
+
+	if userRole != "Admin" {
+		return fmt.Errorf("no permission")
+	}
+
+	db, err := CreateConnection()
+	if err != nil {
+		return err
+	}
+
+	userId, err := GetUserIdByHash(newUserHash)
+	if err != nil {
+		return err
+	}
+
+	groupId, err := GetGroupIdByHash(groupHash)
+	if err != nil {
+		return err
+	}
+
+	if err := db.QueryRow(`
+		update
+		    users_groups
+		set
+			role = $3
+		where
+		    user_id = $1 and
+		    group_id = $2
+		returning
+			user_id`,
+		userId,
+		groupId,
+		role).Scan(
+		&userId); err != nil {
+		return err
+	}
+
+	return nil
 }

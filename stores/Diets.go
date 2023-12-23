@@ -1,9 +1,33 @@
 package stores
 
 import (
+	"fmt"
 	"zakroma_backend/schemas"
 	"zakroma_backend/utils"
 )
+
+func GetDietHashById(id int) (string, error) {
+	db, err := CreateConnection()
+	if err != nil {
+		return "", err
+	}
+
+	var dietHash string
+	err = db.QueryRow(`
+		select
+			diet_hash
+		from
+			diet
+		where
+			diet_id = $1`,
+		id).Scan(
+		&dietHash)
+	if err != nil {
+		return "", err
+	}
+
+	return dietHash, nil
+}
 
 func GetDietIdByHash(hash string) (int, error) {
 	db, err := CreateConnection()
@@ -234,6 +258,89 @@ func ChangeDietName(dietHash string, name string) error {
 		dietHash,
 		name).Scan(
 		&dietHash); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func GetGroupDiets(groupHash string) ([]string, error) {
+	db, err := CreateConnection()
+	if err != nil {
+		return []string{}, err
+	}
+
+	groupId, err := GetGroupIdByHash(groupHash)
+	if err != nil {
+		return []string{}, err
+	}
+
+	dietsRows, err := db.Query(`
+		select
+		    diet_id
+		from
+		    groups_diets
+		where
+		    group_id = $1`,
+		groupId)
+	if err != nil {
+		return []string{}, err
+	}
+	defer dietsRows.Close()
+
+	var dietsIds []int
+	for dietsRows.Next() {
+		var dietId int
+		if err = dietsRows.Scan(&dietId); err != nil {
+			return []string{}, err
+		}
+		dietsIds = append(dietsIds, dietId)
+	}
+
+	var dietsHashes []string
+	for i := range dietsIds {
+		dietHash, err := GetDietHashById(dietsIds[i])
+		if err != nil {
+			return []string{}, err
+		}
+		dietsHashes = append(dietsHashes, dietHash)
+	}
+
+	return dietsHashes, nil
+}
+
+func ChangeCurrentDiet(userHash string, groupHash string, dietHash string) error {
+	userRole, err := GetUserRole(userHash, groupHash)
+	if err != nil {
+		return err
+	}
+
+	if userRole != "Admin" {
+		return fmt.Errorf("no permission")
+	}
+
+	db, err := CreateConnection()
+	if err != nil {
+		return err
+	}
+
+	dietId, err := GetDietIdByHash(dietHash)
+	if err != nil {
+		return err
+	}
+
+	if err = db.QueryRow(`
+		update
+			groups
+		set
+		    current_diet_id = $1
+		where
+		    group_hash = $2
+		returning
+			current_diet_id`,
+		dietId,
+		groupHash).Scan(
+		&dietId); err != nil {
 		return err
 	}
 

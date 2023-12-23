@@ -37,10 +37,16 @@ func CreateDiet(c *gin.Context) {
 
 	session := sessions.Default(c)
 	groupHash := session.Get("group")
+	user := session.Get("hash")
 
 	hash, err := stores.CreateDiet(requestBody.Name, fmt.Sprint(groupHash))
 	if err != nil {
 		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	if err := stores.ChangeCurrentDiet(fmt.Sprint(user), fmt.Sprint(groupHash), hash); err != nil {
+		c.String(http.StatusNotFound, err.Error())
 		return
 	}
 
@@ -73,6 +79,42 @@ func ChangeDietName(c *gin.Context) {
 	}
 
 	if err := stores.ChangeDietName(requestBody.DietHash, requestBody.Name); err != nil {
+		c.String(http.StatusNotFound, err.Error())
+		return
+	}
+
+	c.Status(http.StatusOK)
+}
+
+func GetGroupDiets(c *gin.Context) {
+	session := sessions.Default(c)
+	group := session.Get("group")
+
+	diets, err := stores.GetGroupDiets(fmt.Sprint(group))
+	if err != nil {
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, diets)
+}
+
+func ChangeCurrentDiet(c *gin.Context) {
+	type RequestBody struct {
+		DietHash string `json:"diet-hash"`
+	}
+
+	var requestBody RequestBody
+	if err := c.BindJSON(&requestBody); err != nil {
+		c.String(http.StatusBadRequest, "request body does not match the protocol")
+		return
+	}
+
+	session := sessions.Default(c)
+	hash := session.Get("hash")
+	group := session.Get("group")
+
+	if err := stores.ChangeCurrentDiet(fmt.Sprint(hash), fmt.Sprint(group), requestBody.DietHash); err != nil {
 		c.String(http.StatusNotFound, err.Error())
 		return
 	}
