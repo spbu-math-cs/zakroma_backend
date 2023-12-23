@@ -76,6 +76,15 @@ func AddGroupDiet(groupHash string, dietId int) error {
 	return nil
 }
 
+func AddGroupDietByHash(groupHash string, dietHash string) error {
+	dietId, err := GetDietIdByHash(dietHash)
+	if err != nil {
+		return err
+	}
+
+	return AddGroupDiet(groupHash, dietId)
+}
+
 func CreateGroup(name string) (string, error) {
 	db, err := CreateConnection()
 	if err != nil {
@@ -168,4 +177,122 @@ func GetAllUserGroups(userHash string) ([]schemas.Group, error) {
 	}
 
 	return groups, nil
+}
+
+func GetUserRole(userHash string, groupHash string) (string, error) {
+	db, err := CreateConnection()
+	if err != nil {
+		return "", err
+	}
+
+	userId, err := GetUserIdByHash(userHash)
+	if err != nil {
+		return "", err
+	}
+
+	groupId, err := GetGroupIdByHash(groupHash)
+	if err != nil {
+		return "", err
+	}
+
+	var role string
+	if err = db.QueryRow(`
+		select
+		    role
+		from
+		    users_groups
+		where
+		    user_id = $1 and
+		    group_id = $2`,
+		userId,
+		groupId).Scan(
+		&role); err != nil {
+		return "", err
+	}
+
+	return role, nil
+}
+
+func CheckUserGroup(userHash string, groupHash string) error {
+	_, err := GetUserRole(userHash, groupHash)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func AddGroupUser(userHash string, groupHash string, newUserHash string, role string) error {
+	if err := CheckUserGroup(userHash, groupHash); err != nil {
+		return err
+	}
+
+	db, err := CreateConnection()
+	if err != nil {
+		return err
+	}
+
+	userId, err := GetUserIdByHash(newUserHash)
+	if err != nil {
+		return err
+	}
+
+	groupId, err := GetGroupIdByHash(groupHash)
+	if err != nil {
+		return err
+	}
+
+	if err := db.QueryRow(`
+		insert into
+			users_groups(user_id, group_id, role)
+		values
+			($1, $2, $3)
+		returning
+			user_id`,
+		userId,
+		groupId,
+		role).Scan(
+		&userId); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func ChangeRole(userHash string, groupHash string, newUserHash string, role string) error {
+	if err := CheckUserGroup(userHash, groupHash); err != nil {
+		return err
+	}
+
+	db, err := CreateConnection()
+	if err != nil {
+		return err
+	}
+
+	userId, err := GetUserIdByHash(newUserHash)
+	if err != nil {
+		return err
+	}
+
+	groupId, err := GetGroupIdByHash(groupHash)
+	if err != nil {
+		return err
+	}
+
+	if err := db.QueryRow(`
+		update
+		    users_groups
+		set
+			role = $3
+		where
+		    user_id = $1 and
+		    group_id = $2`,
+		userId,
+		groupId,
+		role).Scan(
+		&userId); err != nil {
+		return err
+	}
+
+	return nil
 }

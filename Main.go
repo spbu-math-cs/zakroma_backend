@@ -36,6 +36,7 @@ func main() {
 	routing.ProductsRouting(api.Group("/products"))
 	routing.DietsRouting(api.Group("/diets"))
 	routing.MealsRouting(api.Group("/meals"))
+	routing.GroupsRouting(api.Group("/groups"))
 
 	runHttp(router)
 }
