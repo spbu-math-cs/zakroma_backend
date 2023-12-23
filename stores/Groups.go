@@ -120,7 +120,7 @@ func CreateGroup(name string, user string) (string, error) {
 		return "", err
 	}
 
-	userId, err := GetUserIdByHash(hash)
+	userId, err := GetUserIdByHash(user)
 	if err != nil {
 		return "", err
 	}
@@ -344,7 +344,9 @@ func ChangeRole(userHash string, groupHash string, newUserHash string, role stri
 			role = $3
 		where
 		    user_id = $1 and
-		    group_id = $2`,
+		    group_id = $2
+		returning
+			user_id`,
 		userId,
 		groupId,
 		role).Scan(
