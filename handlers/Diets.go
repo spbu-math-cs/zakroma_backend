@@ -37,10 +37,16 @@ func CreateDiet(c *gin.Context) {
 
 	session := sessions.Default(c)
 	groupHash := session.Get("group")
+	user := session.Get("hash")
 
 	hash, err := stores.CreateDiet(requestBody.Name, fmt.Sprint(groupHash))
 	if err != nil {
 		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	if err := stores.ChangeCurrentDiet(fmt.Sprint(user), fmt.Sprint(groupHash), hash); err != nil {
+		c.String(http.StatusNotFound, err.Error())
 		return
 	}
 

@@ -9,10 +9,20 @@ import (
 )
 
 func CreateGroup(c *gin.Context) {
+	type RequestBody struct {
+		Name string `json:"name"`
+	}
+
+	var requestBody RequestBody
+	if err := c.BindJSON(&requestBody); err != nil {
+		c.String(http.StatusBadRequest, "request body does not match the protocol")
+		return
+	}
+
 	session := sessions.Default(c)
 	hash := session.Get("hash")
 
-	groupHash, err := stores.CreateGroup(fmt.Sprint(hash))
+	groupHash, err := stores.CreateGroup(requestBody.Name, fmt.Sprint(hash))
 	if err != nil {
 		c.String(http.StatusInternalServerError, err.Error())
 		return

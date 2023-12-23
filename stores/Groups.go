@@ -95,7 +95,7 @@ func AddGroupDietByHash(userHash string, groupHash string, dietHash string) erro
 	return AddGroupDiet(groupHash, dietId)
 }
 
-func CreateGroup(name string) (string, error) {
+func CreateGroup(name string, user string) (string, error) {
 	db, err := CreateConnection()
 	if err != nil {
 		return "", err
@@ -120,6 +120,25 @@ func CreateGroup(name string) (string, error) {
 		return "", err
 	}
 
+	userId, err := GetUserIdByHash(hash)
+	if err != nil {
+		return "", err
+	}
+
+	if err := db.QueryRow(`
+		insert into
+			users_groups(user_id, group_id, role)
+		values
+			($1, $2, $3)
+		returning
+			user_id`,
+		userId,
+		id,
+		"Admin").Scan(
+		&userId); err != nil {
+		return "", err
+	}
+
 	return hash, nil
 }
 
@@ -140,6 +159,25 @@ func CreatePersonalGroup(hash string) error {
 		"Личная группа",
 		hash).Scan(
 		&id); err != nil {
+		return err
+	}
+
+	userId, err := GetUserIdByHash(hash)
+	if err != nil {
+		return err
+	}
+
+	if err := db.QueryRow(`
+		insert into
+			users_groups(user_id, group_id, role)
+		values
+			($1, $2, $3)
+		returning
+			user_id`,
+		userId,
+		id,
+		"Admin").Scan(
+		&userId); err != nil {
 		return err
 	}
 
