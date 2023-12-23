@@ -90,7 +90,7 @@ func AddGroupDiet(c *gin.Context) {
 	hash := session.Get("hash")
 	group := session.Get("group")
 
-	if err := stores.AddGroupDietByHash(fmt.Sprint(hash), requestBody.DietHash); err != nil {
+	if err := stores.AddGroupDietByHash(fmt.Sprint(hash), fmt.Sprint(group), requestBody.DietHash); err != nil {
 		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}

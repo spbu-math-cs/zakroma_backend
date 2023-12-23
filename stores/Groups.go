@@ -1,6 +1,7 @@
 package stores
 
 import (
+	"fmt"
 	"zakroma_backend/schemas"
 	"zakroma_backend/utils"
 )
@@ -76,7 +77,16 @@ func AddGroupDiet(groupHash string, dietId int) error {
 	return nil
 }
 
-func AddGroupDietByHash(groupHash string, dietHash string) error {
+func AddGroupDietByHash(userHash string, groupHash string, dietHash string) error {
+	userRole, err := GetUserRole(userHash, groupHash)
+	if err != nil {
+		return err
+	}
+
+	if userRole != "Admin" {
+		return fmt.Errorf("no permission")
+	}
+
 	dietId, err := GetDietIdByHash(dietHash)
 	if err != nil {
 		return err
@@ -223,8 +233,13 @@ func CheckUserGroup(userHash string, groupHash string) error {
 }
 
 func AddGroupUser(userHash string, groupHash string, newUserHash string, role string) error {
-	if err := CheckUserGroup(userHash, groupHash); err != nil {
+	userRole, err := GetUserRole(userHash, groupHash)
+	if err != nil {
 		return err
+	}
+
+	if userRole != "Admin" {
+		return fmt.Errorf("no permission")
 	}
 
 	db, err := CreateConnection()
@@ -260,8 +275,13 @@ func AddGroupUser(userHash string, groupHash string, newUserHash string, role st
 }
 
 func ChangeRole(userHash string, groupHash string, newUserHash string, role string) error {
-	if err := CheckUserGroup(userHash, groupHash); err != nil {
+	userRole, err := GetUserRole(userHash, groupHash)
+	if err != nil {
 		return err
+	}
+
+	if userRole != "Admin" {
+		return fmt.Errorf("no permission")
 	}
 
 	db, err := CreateConnection()
