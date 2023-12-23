@@ -86,7 +86,8 @@ func GetDishShortByHash(hash string) (schemas.Dish, error) {
     		calories,
     		proteins,
     		fats,
-    		carbs
+    		carbs,
+    		image_path
 		from
 			dishes
 		where
@@ -98,7 +99,8 @@ func GetDishShortByHash(hash string) (schemas.Dish, error) {
 		&dish.Calories,
 		&dish.Proteins,
 		&dish.Fats,
-		&dish.Carbs); err != nil {
+		&dish.Carbs,
+		&dish.ImagePath); err != nil {
 		return schemas.Dish{}, err
 	}
 
@@ -120,7 +122,8 @@ func GetDishShortById(id int) (schemas.Dish, error) {
     		calories,
     		proteins,
     		fats,
-    		carbs
+    		carbs,
+    		image_path
 		from
 			dishes
 		where
@@ -132,7 +135,8 @@ func GetDishShortById(id int) (schemas.Dish, error) {
 		&dish.Calories,
 		&dish.Proteins,
 		&dish.Fats,
-		&dish.Carbs); err != nil {
+		&dish.Carbs,
+		&dish.ImagePath); err != nil {
 		return schemas.Dish{}, err
 	}
 
@@ -155,6 +159,7 @@ func GetDishShortWithRecipeByHash(hash string) (schemas.Dish, error) {
     		proteins,
     		fats,
     		carbs,
+    		image_path,
     		recipe
 		from
 			dishes
@@ -168,6 +173,7 @@ func GetDishShortWithRecipeByHash(hash string) (schemas.Dish, error) {
 		&dish.Proteins,
 		&dish.Fats,
 		&dish.Carbs,
+		&dish.ImagePath,
 		&dish.Recipe); err != nil {
 		return schemas.Dish{}, err
 	}

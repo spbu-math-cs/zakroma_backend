@@ -38,6 +38,7 @@ func Login(c *gin.Context) {
 
 	session := sessions.Default(c)
 	session.Set("hash", user.Hash)
+	session.Set("group", user.Hash)
 	if err := session.Save(); err != nil {
 		c.String(http.StatusInternalServerError, err.Error())
 		return
@@ -66,6 +67,7 @@ func Register(c *gin.Context) {
 
 	session := sessions.Default(c)
 	session.Set("hash", user.Hash)
+	session.Set("group", user.Hash)
 	if err := session.Save(); err != nil {
 		c.String(http.StatusInternalServerError, err.Error())
 		return

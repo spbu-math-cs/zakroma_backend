@@ -4,7 +4,6 @@ insert into tags_for_dishes
 values (0, 'breakfast');
 
 insert into tags_for_dishes(tag)
-values ('breakfast'),
-       ('snack'),
+values ('snack'),
        ('lunch'),
        ('dinner');

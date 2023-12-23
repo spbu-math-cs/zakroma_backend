@@ -25,7 +25,7 @@ func Login(user schemas.User) (string, error) {
 		user.Email).Scan(
 		&user.Hash,
 		&hashedPassword); err != nil {
-		return "", nil
+		return "", err
 	}
 
 	if err = bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(user.Password)); err != nil {
@@ -90,6 +90,10 @@ func Register(user schemas.User) (string, error) {
 		user.BirthDate,
 		user.Hash).Scan(
 		&user.Id); err != nil {
+		return "", err
+	}
+
+	if err = CreatePersonalGroup(user.Hash); err != nil {
 		return "", err
 	}
 

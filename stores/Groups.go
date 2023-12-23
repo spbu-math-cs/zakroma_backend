@@ -104,10 +104,10 @@ func CreateGroup(name string) (string, error) {
 	return hash, nil
 }
 
-func CreatePersonalGroup(hash string) (string, error) {
+func CreatePersonalGroup(hash string) error {
 	db, err := CreateConnection()
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	var id int
@@ -115,16 +115,16 @@ func CreatePersonalGroup(hash string) (string, error) {
 		insert into
 			groups(group_name, group_hash)
 		values
-			($1, $2, $3)
+			($1, $2)
 		returning
 			group_id`,
 		"Личная группа",
 		hash).Scan(
 		&id); err != nil {
-		return "", err
+		return err
 	}
 
-	return hash, nil
+	return nil
 }
 
 func GetAllUserGroups(userHash string) ([]schemas.Group, error) {

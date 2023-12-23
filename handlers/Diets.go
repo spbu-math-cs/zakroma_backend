@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"fmt"
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"zakroma_backend/stores"
@@ -24,8 +26,7 @@ func GetDietByHash(c *gin.Context) {
 
 func CreateDiet(c *gin.Context) {
 	type RequestBody struct {
-		Name      string `json:"name"`
-		GroupHash string `json:"group-hash"`
+		Name string `json:"name"`
 	}
 
 	var requestBody RequestBody
@@ -34,7 +35,10 @@ func CreateDiet(c *gin.Context) {
 		return
 	}
 
-	hash, err := stores.CreateDiet(requestBody.Name, requestBody.GroupHash)
+	session := sessions.Default(c)
+	groupHash := session.Get("group")
+
+	hash, err := stores.CreateDiet(requestBody.Name, fmt.Sprint(groupHash))
 	if err != nil {
 		c.String(http.StatusInternalServerError, err.Error())
 		return
@@ -44,17 +48,10 @@ func CreateDiet(c *gin.Context) {
 }
 
 func GetCurrentDiet(c *gin.Context) {
-	type RequestBody struct {
-		GroupHash string `json:"group-hash"`
-	}
+	session := sessions.Default(c)
+	groupHash := session.Get("group")
 
-	var requestBody RequestBody
-	if err := c.BindJSON(&requestBody); err != nil {
-		c.String(http.StatusBadRequest, "request body does not match the protocol")
-		return
-	}
-
-	diet, err := stores.GetCurrentDiet(requestBody.GroupHash)
+	diet, err := stores.GetCurrentDiet(fmt.Sprint(groupHash))
 	if err != nil {
 		c.String(http.StatusNotFound, err.Error())
 		return

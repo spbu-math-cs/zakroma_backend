@@ -52,7 +52,7 @@ CREATE TABLE "dishes" (
   "carbs" numeric,
   "fats" numeric,
   "calories" numeric,
-  "image_path" varchar(64),
+  "image_path" text,
   "dish_hash" varchar(64)
 );
 
@@ -212,3 +212,6 @@ ALTER TABLE "diet_tags" ADD FOREIGN KEY ("tag_id") REFERENCES "tags_for_diet" ("
 ALTER TABLE "diet_tags" ADD FOREIGN KEY ("diet_id") REFERENCES "diet" ("diet_id");
 
 ALTER TABLE "meals" ADD FOREIGN KEY ("tag_id") REFERENCES "tags_for_meals" ("tag_id");
+
+
+update groups set current_diet_id=7 where group_id=1;

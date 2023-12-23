@@ -14,7 +14,8 @@ func GetAllUserGroups(c *gin.Context) {
 
 	groups, err := stores.GetAllUserGroups(fmt.Sprint(hash))
 	if err != nil {
-
+		c.String(http.StatusInternalServerError, err.Error())
+		return
 	}
 
 	c.JSON(http.StatusOK, groups)

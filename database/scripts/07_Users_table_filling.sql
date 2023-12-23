@@ -2,6 +2,7 @@ ALTER SEQUENCE users_user_id_seq RESTART WITH 1;
 
 insert into users values
         (0, 'admin', 'adminov', 'YAVSEHNENAVIZHY@yandex.com', '$2a$10$YDFE2R4tVHf1gG7qSF29kuYLxZ1sk4OeWZQb7XFa0zWEDVab868QK', '1999-12-31', '55f0d301f35c0157e25c665d9169abf99186d84756061d5a87a4e8bdcd0e7138');
+-- password: milka
 
 insert into users (user_name, user_surname, user_email, password_hash, birth_date, user_hash)
 values
