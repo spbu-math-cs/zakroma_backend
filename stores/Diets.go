@@ -8,6 +8,9 @@ import (
 
 func GetDietHashById(id int) (string, error) {
 	db, err := CreateConnection()
+	if err == nil {
+		defer db.Close()
+	}
 	if err != nil {
 		return "", err
 	}
@@ -31,6 +34,9 @@ func GetDietHashById(id int) (string, error) {
 
 func GetDietIdByHash(hash string) (int, error) {
 	db, err := CreateConnection()
+	if err == nil {
+		defer db.Close()
+	}
 	if err != nil {
 		return -1, err
 	}
@@ -54,6 +60,9 @@ func GetDietIdByHash(hash string) (int, error) {
 
 func GetDietByHash(hash string) (schemas.Diet, error) {
 	db, err := CreateConnection()
+	if err == nil {
+		defer db.Close()
+	}
 	if err != nil {
 		return schemas.Diet{}, err
 	}
@@ -108,7 +117,72 @@ func GetDietByHash(hash string) (schemas.Diet, error) {
 
 		dayDiet.Index = index
 		dayDiet.MealsAmount = len(dayDiet.Meals)
-		dayDiet.Meals = dayDiet.Meals[:min(3, len(dayDiet.Meals))]
+
+		diet.DayDiets = append(diet.DayDiets, dayDiet)
+	}
+
+	return diet, nil
+}
+
+func GetDietByHashWithoutDishes(hash string) (schemas.Diet, error) {
+	db, err := CreateConnection()
+	if err == nil {
+		defer db.Close()
+	}
+	if err != nil {
+		return schemas.Diet{}, err
+	}
+
+	var diet schemas.Diet
+	err = db.QueryRow(`
+		select
+			diet_id,
+			diet_hash,
+			diet_name
+		from
+			diet
+		where
+			diet_hash = $1`,
+		hash).Scan(
+		&diet.Id,
+		&diet.Hash,
+		&diet.Name)
+	if err != nil {
+		return schemas.Diet{}, err
+	}
+
+	dayDietsRows, err := db.
+		Query(`
+			select
+			    diet_day_id,
+			    index
+			from
+			    diet_day_diet
+			where
+			    diet_id = $1
+			order by
+			    index`,
+			diet.Id)
+	defer dayDietsRows.Close()
+	if err != nil {
+		return schemas.Diet{}, err
+	}
+
+	for dayDietsRows.Next() {
+		var dayDietId int
+		var index int
+		if err = dayDietsRows.Scan(
+			&dayDietId,
+			&index); err != nil {
+			return schemas.Diet{}, err
+		}
+		dayDiet, err := GetDayDietByIdWithoutDishes(dayDietId)
+		if err != nil {
+			return schemas.Diet{}, err
+		}
+
+		dayDiet.Index = index
+		dayDiet.MealsAmount = len(dayDiet.Meals)
 
 		diet.DayDiets = append(diet.DayDiets, dayDiet)
 	}
@@ -118,6 +192,9 @@ func GetDietByHash(hash string) (schemas.Diet, error) {
 
 func GetDietById(id int) (schemas.Diet, error) {
 	db, err := CreateConnection()
+	if err == nil {
+		defer db.Close()
+	}
 	if err != nil {
 		return schemas.Diet{}, err
 	}
@@ -184,6 +261,9 @@ var DefaultDayDietName = [7]string{"Понедельник", "Вторник", "
 
 func CreateDiet(name string, groupHash string) (string, error) {
 	db, err := CreateConnection()
+	if err == nil {
+		defer db.Close()
+	}
 	if err != nil {
 		return "", err
 	}
@@ -242,6 +322,9 @@ func GetCurrentDiet(groupHash string) (schemas.Diet, error) {
 
 func ChangeDietName(dietHash string, name string) error {
 	db, err := CreateConnection()
+	if err == nil {
+		defer db.Close()
+	}
 	if err != nil {
 		return err
 	}
@@ -266,6 +349,9 @@ func ChangeDietName(dietHash string, name string) error {
 
 func GetGroupDiets(groupHash string) ([]string, error) {
 	db, err := CreateConnection()
+	if err == nil {
+		defer db.Close()
+	}
 	if err != nil {
 		return []string{}, err
 	}
@@ -320,6 +406,9 @@ func ChangeCurrentDiet(userHash string, groupHash string, dietHash string) error
 	}
 
 	db, err := CreateConnection()
+	if err == nil {
+		defer db.Close()
+	}
 	if err != nil {
 		return err
 	}

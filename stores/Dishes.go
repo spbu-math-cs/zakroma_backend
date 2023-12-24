@@ -7,6 +7,9 @@ import (
 
 func GetDishIdByHash(hash string) (int, error) {
 	db, err := CreateConnection()
+	if err == nil {
+		defer db.Close()
+	}
 	if err != nil {
 		return -1, err
 	}
@@ -29,6 +32,9 @@ func GetDishIdByHash(hash string) (int, error) {
 
 func GetDishByHash(hash string) (schemas.Dish, error) {
 	db, err := CreateConnection()
+	if err == nil {
+		defer db.Close()
+	}
 	if err != nil {
 		return schemas.Dish{}, err
 	}
@@ -73,6 +79,9 @@ func GetDishByHash(hash string) (schemas.Dish, error) {
 
 func GetDishShortByHash(hash string) (schemas.Dish, error) {
 	db, err := CreateConnection()
+	if err == nil {
+		defer db.Close()
+	}
 	if err != nil {
 		return schemas.Dish{}, err
 	}
@@ -109,6 +118,9 @@ func GetDishShortByHash(hash string) (schemas.Dish, error) {
 
 func GetDishShortById(id int) (schemas.Dish, error) {
 	db, err := CreateConnection()
+	if err == nil {
+		defer db.Close()
+	}
 	if err != nil {
 		return schemas.Dish{}, err
 	}
@@ -145,6 +157,9 @@ func GetDishShortById(id int) (schemas.Dish, error) {
 
 func GetDishShortWithRecipeByHash(hash string) (schemas.Dish, error) {
 	db, err := CreateConnection()
+	if err == nil {
+		defer db.Close()
+	}
 	if err != nil {
 		return schemas.Dish{}, err
 	}
@@ -192,6 +207,9 @@ func checkMatch(name string, pattern string) bool {
 
 func GetDishesShortByName(name string, rangeBegin int, rangeEnd int) []schemas.Dish {
 	db, err := CreateConnection()
+	if err == nil {
+		defer db.Close()
+	}
 	if err != nil {
 		return make([]schemas.Dish, 0)
 	}
@@ -247,6 +265,9 @@ func GetDishesShortByName(name string, rangeBegin int, rangeEnd int) []schemas.D
 
 func GetDishesShortByTags(tags []string, rangeBegin int, rangeEnd int) []schemas.Dish {
 	db, err := CreateConnection()
+	if err == nil {
+		defer db.Close()
+	}
 	if err != nil {
 		return make([]schemas.Dish, 0)
 	}

@@ -8,6 +8,9 @@ import (
 
 func GetCurrentDietId(groupHash string) (int, error) {
 	db, err := CreateConnection()
+	if err == nil {
+		defer db.Close()
+	}
 	if err != nil {
 		return -1, err
 	}
@@ -30,6 +33,9 @@ func GetCurrentDietId(groupHash string) (int, error) {
 
 func GetGroupIdByHash(groupHash string) (int, error) {
 	db, err := CreateConnection()
+	if err == nil {
+		defer db.Close()
+	}
 	if err != nil {
 		return -1, err
 	}
@@ -52,6 +58,9 @@ func GetGroupIdByHash(groupHash string) (int, error) {
 
 func AddGroupDiet(groupHash string, dietId int) error {
 	db, err := CreateConnection()
+	if err == nil {
+		defer db.Close()
+	}
 	if err != nil {
 		return err
 	}
@@ -97,6 +106,9 @@ func AddGroupDietByHash(userHash string, groupHash string, dietHash string) erro
 
 func CreateGroup(name string, user string) (string, error) {
 	db, err := CreateConnection()
+	if err == nil {
+		defer db.Close()
+	}
 	if err != nil {
 		return "", err
 	}
@@ -144,6 +156,9 @@ func CreateGroup(name string, user string) (string, error) {
 
 func CreatePersonalGroup(hash string) error {
 	db, err := CreateConnection()
+	if err == nil {
+		defer db.Close()
+	}
 	if err != nil {
 		return err
 	}
@@ -191,6 +206,9 @@ func GetAllUserGroups(userHash string) ([]schemas.Group, error) {
 	}
 
 	db, err := CreateConnection()
+	if err == nil {
+		defer db.Close()
+	}
 	if err != nil {
 		return []schemas.Group{}, err
 	}
@@ -229,6 +247,9 @@ func GetAllUserGroups(userHash string) ([]schemas.Group, error) {
 
 func GetUserRole(userHash string, groupHash string) (string, error) {
 	db, err := CreateConnection()
+	if err == nil {
+		defer db.Close()
+	}
 	if err != nil {
 		return "", err
 	}
@@ -281,6 +302,9 @@ func AddGroupUser(userHash string, groupHash string, newUserHash string, role st
 	}
 
 	db, err := CreateConnection()
+	if err == nil {
+		defer db.Close()
+	}
 	if err != nil {
 		return err
 	}
@@ -323,6 +347,9 @@ func ChangeRole(userHash string, groupHash string, newUserHash string, role stri
 	}
 
 	db, err := CreateConnection()
+	if err == nil {
+		defer db.Close()
+	}
 	if err != nil {
 		return err
 	}

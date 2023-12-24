@@ -4,6 +4,9 @@ import "zakroma_backend/schemas"
 
 func GetProductById(id int) (schemas.Product, error) {
 	db, err := CreateConnection()
+	if err == nil {
+		defer db.Close()
+	}
 	if err != nil {
 		return schemas.Product{}, err
 	}

@@ -7,6 +7,9 @@ import (
 
 func GetMealIdByHash(hash string) (int, error) {
 	db, err := CreateConnection()
+	if err == nil {
+		defer db.Close()
+	}
 	if err != nil {
 		return -1, err
 	}
@@ -30,6 +33,9 @@ func GetMealIdByHash(hash string) (int, error) {
 
 func GetMealByHash(hash string) (schemas.Meal, error) {
 	db, err := CreateConnection()
+	if err == nil {
+		defer db.Close()
+	}
 	if err != nil {
 		return schemas.Meal{}, err
 	}
@@ -116,6 +122,9 @@ func GetMealByHash(hash string) (schemas.Meal, error) {
 
 func GetMealById(id int) (schemas.Meal, error) {
 	db, err := CreateConnection()
+	if err == nil {
+		defer db.Close()
+	}
 	if err != nil {
 		return schemas.Meal{}, err
 	}
@@ -184,8 +193,61 @@ func GetMealById(id int) (schemas.Meal, error) {
 	return meal, nil
 }
 
+func GetMealByIdWithoutDishes(id int) (schemas.Meal, error) {
+	db, err := CreateConnection()
+	if err == nil {
+		defer db.Close()
+	}
+	if err != nil {
+		return schemas.Meal{}, err
+	}
+
+	var meal schemas.Meal
+	var tag string
+	err = db.QueryRow(`
+		select
+			meals.meal_id,
+			meals.meal_hash,
+			meals.meal_name,
+			tags_for_meals.tag
+		from
+			meals,
+			tags_for_meals
+		where
+			meals.meal_id = $1 and
+			meals.tag_id = tags_for_meals.tag_id`,
+		id).Scan(
+		&meal.Id,
+		&meal.Hash,
+		&meal.Name,
+		&tag)
+	if err != nil {
+		return schemas.Meal{}, err
+	}
+	if len(meal.Name) == 0 {
+		meal.Name = tag
+	}
+
+	if err := db.QueryRow(`
+		select
+		    count(*)
+		from
+			meals_dishes
+		where
+			meals_dishes.meal_id = $1`,
+		meal.Id).Scan(
+		&meal.DishesAmount); err != nil {
+		return schemas.Meal{}, err
+	}
+
+	return meal, nil
+}
+
 func CreateMeal(dietHash string, dayDietIndex int, name string) (string, error) {
 	db, err := CreateConnection()
+	if err == nil {
+		defer db.Close()
+	}
 	if err != nil {
 		return "", err
 	}
@@ -285,6 +347,9 @@ func CreateMeal(dietHash string, dayDietIndex int, name string) (string, error) 
 
 func GetAllMealsTags() ([]schemas.Tag, error) {
 	db, err := CreateConnection()
+	if err == nil {
+		defer db.Close()
+	}
 	if err != nil {
 		return []schemas.Tag{}, err
 	}
@@ -316,6 +381,9 @@ func GetAllMealsTags() ([]schemas.Tag, error) {
 
 func AddMealDish(mealHash string, dishHash string, portions int) error {
 	db, err := CreateConnection()
+	if err == nil {
+		defer db.Close()
+	}
 	if err != nil {
 		return err
 	}

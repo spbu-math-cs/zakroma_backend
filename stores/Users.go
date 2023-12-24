@@ -9,6 +9,9 @@ import (
 
 func Login(user schemas.User) (string, error) {
 	db, err := CreateConnection()
+	if err == nil {
+		defer db.Close()
+	}
 	if err != nil {
 		return "", err
 	}
@@ -37,6 +40,9 @@ func Login(user schemas.User) (string, error) {
 
 func Register(user schemas.User) (string, error) {
 	db, err := CreateConnection()
+	if err == nil {
+		defer db.Close()
+	}
 	if err != nil {
 		return "", err
 	}
@@ -102,6 +108,9 @@ func Register(user schemas.User) (string, error) {
 
 func GetUserIdByHash(hash string) (int, error) {
 	db, err := CreateConnection()
+	if err == nil {
+		defer db.Close()
+	}
 	if err != nil {
 		return -1, err
 	}
