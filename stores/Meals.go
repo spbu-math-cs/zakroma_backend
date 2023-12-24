@@ -46,7 +46,12 @@ func GetMealByHash(hash string) (schemas.Meal, error) {
 		select
 			meals.meal_id,
 			meals.meal_hash,
-			meals.meal_name,
+			case 
+			    when meals.meal_name is null
+			        then ''
+				else
+				    meals.meal_name
+			end,
 			case
 			    when meals.tag_id is null
 			        then -1
@@ -71,7 +76,7 @@ func GetMealByHash(hash string) (schemas.Meal, error) {
 			select
 				tag
 			from
-				tags_for_dishes
+				tags_for_meals
 			where
 				tag_id = $1`,
 			tagId).Scan(
@@ -130,28 +135,49 @@ func GetMealById(id int) (schemas.Meal, error) {
 	}
 
 	var meal schemas.Meal
-	var tag string
+	var tagId int
 	err = db.QueryRow(`
 		select
 			meals.meal_id,
 			meals.meal_hash,
-			meals.meal_name,
-			tags_for_meals.tag
+			case 
+			    when meals.meal_name is null
+			        then ''
+				else
+				    meals.meal_name
+			end,
+			case
+			    when meals.tag_id is null
+			        then -1
+				else
+					meals.tag_id
+			end
 		from
-			meals,
-			tags_for_meals
+			meals
 		where
-			meals.meal_id = $1 and
-			meals.tag_id = tags_for_meals.tag_id`,
+			meals.meal_id = $1`,
 		id).Scan(
 		&meal.Id,
 		&meal.Hash,
 		&meal.Name,
-		&tag)
+		&tagId)
 	if err != nil {
 		return schemas.Meal{}, err
 	}
 	if len(meal.Name) == 0 {
+		var tag string
+		err = db.QueryRow(`
+			select
+				tag
+			from
+				tags_for_meals
+			where
+				tag_id = $1`,
+			tagId).Scan(
+			&tag)
+		if err != nil {
+			return schemas.Meal{}, err
+		}
 		meal.Name = tag
 	}
 
@@ -163,7 +189,7 @@ func GetMealById(id int) (schemas.Meal, error) {
 			meals_dishes
 		where
 			meals_dishes.meal_id = $1`,
-		meal.Id)
+	)
 	if err != nil {
 		return schemas.Meal{}, err
 	}
@@ -203,28 +229,49 @@ func GetMealByIdWithoutDishes(id int) (schemas.Meal, error) {
 	}
 
 	var meal schemas.Meal
-	var tag string
+	var tagId int
 	err = db.QueryRow(`
 		select
 			meals.meal_id,
 			meals.meal_hash,
-			meals.meal_name,
-			tags_for_meals.tag
+			case 
+			    when meals.meal_name is null
+			        then ''
+				else
+				    meals.meal_name
+			end,
+			case
+			    when meals.tag_id is null
+			        then -1
+				else
+					meals.tag_id
+			end
 		from
-			meals,
-			tags_for_meals
+			meals
 		where
-			meals.meal_id = $1 and
-			meals.tag_id = tags_for_meals.tag_id`,
+			meals.meal_id = $1`,
 		id).Scan(
 		&meal.Id,
 		&meal.Hash,
 		&meal.Name,
-		&tag)
+		&tagId)
 	if err != nil {
 		return schemas.Meal{}, err
 	}
 	if len(meal.Name) == 0 {
+		var tag string
+		err = db.QueryRow(`
+			select
+				tag
+			from
+				tags_for_meals
+			where
+				tag_id = $1`,
+			tagId).Scan(
+			&tag)
+		if err != nil {
+			return schemas.Meal{}, err
+		}
 		meal.Name = tag
 	}
 
@@ -306,12 +353,12 @@ func CreateMeal(dietHash string, dayDietIndex int, name string) (string, error) 
 	mealId := 0
 	if tagId == -1 {
 		if err = db.QueryRow(`
-		insert into
-			meals(meal_name, meal_hash)
-		values 
-			($1, $2)
-		returning
-			meal_id`,
+			insert into
+				meals(meal_name, meal_hash)
+			values 
+				($1, $2)
+			returning
+				meal_id`,
 			name, hash).Scan(
 			&mealId); err != nil {
 			return "", err

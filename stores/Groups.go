@@ -383,3 +383,111 @@ func ChangeRole(userHash string, groupHash string, newUserHash string, role stri
 
 	return nil
 }
+
+func MoveDietToCart(user string, group string, diet string, days []int) error {
+	userRole, err := GetUserRole(user, group)
+	if err != nil {
+		return err
+	}
+
+	if userRole != "Admin" {
+		return fmt.Errorf("no permission")
+	}
+
+	dietProducts, err := GetDietProducts(diet, days)
+	if err != nil {
+		return err
+	}
+
+	cart, err := GetGroupCartList(group)
+	if err != nil {
+		return err
+	}
+
+	i := 0
+	j := 0
+	for i < len(dietProducts) && j < len(cart) {
+		if dietProducts[i].ProductId == cart[j].ProductId {
+			if err := ChangeGroupCartProduct(group, dietProducts[i].ProductId,
+				dietProducts[i].Amount+cart[j].Amount); err != nil {
+				return err
+			}
+			i += 1
+			j += 1
+		} else if dietProducts[i].ProductId < cart[j].ProductId {
+			if err := AddGroupCartProduct(group, dietProducts[i].ProductId,
+				dietProducts[i].Amount); err != nil {
+				return err
+			}
+			i += 1
+		} else {
+			j += 1
+		}
+	}
+	for i < len(dietProducts) {
+		if err := AddGroupCartProduct(group, dietProducts[i].ProductId,
+			dietProducts[i].Amount); err != nil {
+			return err
+		}
+		i += 1
+	}
+
+	return nil
+}
+
+func MoveCartToStore(user string, group string) error {
+	userRole, err := GetUserRole(user, group)
+	if err != nil {
+		return err
+	}
+
+	if userRole != "Admin" {
+		return fmt.Errorf("no permission")
+	}
+
+	cart, err := GetGroupCartList(group)
+	if err != nil {
+		return err
+	}
+
+	store, err := GetGroupStoreList(group)
+	if err != nil {
+		return err
+	}
+
+	i := 0
+	j := 0
+	for i < len(cart) && j < len(store) {
+		if cart[i].ProductId == store[j].ProductId {
+			if err := ChangeGroupStoreProduct(group, cart[i].ProductId, cart[i].Amount+store[j].Amount); err != nil {
+				return err
+			}
+			if err := RemoveGroupCartProduct(group, cart[i].ProductId); err != nil {
+				return err
+			}
+			i += 1
+			j += 1
+		} else if cart[i].ProductId < store[j].ProductId {
+			if err := AddGroupStoreProduct(group, cart[i].ProductId, cart[i].Amount); err != nil {
+				return err
+			}
+			if err := RemoveGroupCartProduct(group, cart[i].ProductId); err != nil {
+				return err
+			}
+			i += 1
+		} else {
+			j += 1
+		}
+	}
+	for i < len(cart) {
+		if err := AddGroupStoreProduct(group, cart[i].ProductId, cart[i].Amount); err != nil {
+			return err
+		}
+		if err := RemoveGroupCartProduct(group, cart[i].ProductId); err != nil {
+			return err
+		}
+		i += 1
+	}
+
+	return nil
+}

@@ -153,3 +153,41 @@ func GetAllUserGroups(c *gin.Context) {
 
 	c.JSON(http.StatusOK, groups)
 }
+
+func MoveDietToCart(c *gin.Context) {
+	type RequestBody struct {
+		DietHash string `json:"diet-hash"`
+		Days     []int  `json:"days"`
+	}
+
+	var requestBody RequestBody
+	if err := c.BindJSON(&requestBody); err != nil {
+		c.String(http.StatusBadRequest, "request body does not match the protocol")
+		return
+	}
+
+	session := sessions.Default(c)
+	user := session.Get("hash")
+	group := session.Get("group")
+
+	if err := stores.MoveDietToCart(fmt.Sprint(user), fmt.Sprint(group),
+		requestBody.DietHash, requestBody.Days); err != nil {
+		c.String(http.StatusNotFound, err.Error())
+		return
+	}
+
+	c.Status(http.StatusOK)
+}
+
+func MoveCartToStore(c *gin.Context) {
+	session := sessions.Default(c)
+	user := session.Get("hash")
+	group := session.Get("group")
+
+	if err := stores.MoveCartToStore(fmt.Sprint(user), fmt.Sprint(group)); err != nil {
+		c.String(http.StatusNotFound, err.Error())
+		return
+	}
+
+	c.Status(http.StatusOK)
+}
