@@ -121,3 +121,24 @@ func ChangeCurrentDiet(c *gin.Context) {
 
 	c.Status(http.StatusOK)
 }
+
+func GetDietProducts(c *gin.Context) {
+	type RequestBody struct {
+		DietHash string `json:"diet-hash"`
+		Days     []int  `json:"days"`
+	}
+
+	var requestBody RequestBody
+	if err := c.BindJSON(&requestBody); err != nil {
+		c.String(http.StatusBadRequest, "request body does not match the protocol")
+		return
+	}
+
+	products, err := stores.GetDietProducts(requestBody.DietHash, requestBody.Days)
+	if err != nil {
+		c.String(http.StatusNotFound, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, products)
+}

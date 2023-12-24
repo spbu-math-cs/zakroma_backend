@@ -19,6 +19,8 @@ DROP TABLE IF EXISTS diet_day CASCADE;
 DROP TABLE IF EXISTS tags_for_meals CASCADE;
 DROP TABLE IF EXISTS diet_tags CASCADE;
 DROP TABLE IF EXISTS tags_for_diet CASCADE;
+drop table if exists group_cart cascade;
+drop table if exists group_store cascade;
 
 CREATE TABLE "users" (
   "user_id" serial PRIMARY KEY,
@@ -167,6 +169,20 @@ CREATE TABLE "tags_for_diet" (
   "tag" varchar(32)
 );
 
+create table group_cart (
+    group_id integer,
+    product_id integer,
+    amount numeric,
+    primary key (group_id, product_id)
+);
+
+create table group_store (
+    group_id integer,
+    product_id integer,
+    amount numeric,
+    primary key (group_id, product_id)
+);
+
 ALTER TABLE "users_groups" ADD FOREIGN KEY ("user_id") REFERENCES "users" ("user_id");
 
 ALTER TABLE "users_groups" ADD FOREIGN KEY ("group_id") REFERENCES "groups" ("group_id");
@@ -213,5 +229,8 @@ ALTER TABLE "diet_tags" ADD FOREIGN KEY ("diet_id") REFERENCES "diet" ("diet_id"
 
 ALTER TABLE "meals" ADD FOREIGN KEY ("tag_id") REFERENCES "tags_for_meals" ("tag_id");
 
+alter table group_cart add foreign key (group_id) references groups(group_id);
+alter table group_cart add foreign key (product_id) references products(product_id);
 
-update groups set current_diet_id=7 where group_id=1;
+alter table group_store add foreign key (group_id) references groups(group_id);
+alter table group_store add foreign key (product_id) references products(product_id);
