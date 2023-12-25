@@ -3,7 +3,16 @@ package stores
 import (
 	"sort"
 	"zakroma_backend/schemas"
+	"zakroma_backend/utils"
 )
+
+var DISHES_BY_ID_CACHE_SIZE = 100000
+var DishesByIdCache = map[int]schemas.Dish{}
+var DishesByIdCacheQueue = utils.CreateQueue(DISHES_BY_ID_CACHE_SIZE)
+
+var DISHES_BY_HASH_CACHE_SIZE = 1000
+var DishesByHashCache = map[string]schemas.Dish{}
+var DishesByHashCacheQueue = utils.CreateQueue(DISHES_BY_HASH_CACHE_SIZE)
 
 func GetDishIdByHash(hash string) (int, error) {
 	db, err := CreateConnection()
@@ -78,6 +87,13 @@ func GetDishByHash(hash string) (schemas.Dish, error) {
 }
 
 func GetDishShortByHash(hash string) (schemas.Dish, error) {
+	var dish schemas.Dish
+
+	dish, found := DishesByHashCache[hash]
+	if found {
+		return dish, nil
+	}
+
 	db, err := CreateConnection()
 	if err == nil {
 		defer db.Close()
@@ -86,7 +102,6 @@ func GetDishShortByHash(hash string) (schemas.Dish, error) {
 		return schemas.Dish{}, err
 	}
 
-	var dish schemas.Dish
 	if err = db.QueryRow(`
 		select
 		    dish_id,
@@ -113,10 +128,23 @@ func GetDishShortByHash(hash string) (schemas.Dish, error) {
 		return schemas.Dish{}, err
 	}
 
+	DishesByHashCache[hash] = dish
+	removedDish, flag := DishesByHashCacheQueue.Push(hash)
+	if flag {
+		delete(DishesByHashCache, removedDish.(string))
+	}
+
 	return dish, nil
 }
 
 func GetDishShortById(id int) (schemas.Dish, error) {
+	var dish schemas.Dish
+
+	dish, found := DishesByIdCache[id]
+	if found {
+		return dish, nil
+	}
+
 	db, err := CreateConnection()
 	if err == nil {
 		defer db.Close()
@@ -125,7 +153,6 @@ func GetDishShortById(id int) (schemas.Dish, error) {
 		return schemas.Dish{}, err
 	}
 
-	var dish schemas.Dish
 	if err = db.QueryRow(`
 		select
 		    dish_id,
@@ -150,6 +177,12 @@ func GetDishShortById(id int) (schemas.Dish, error) {
 		&dish.Carbs,
 		&dish.ImagePath); err != nil {
 		return schemas.Dish{}, err
+	}
+
+	DishesByIdCache[id] = dish
+	removedDish, flag := DishesByIdCacheQueue.Push(id)
+	if flag {
+		delete(DishesByIdCache, removedDish.(int))
 	}
 
 	return dish, nil
