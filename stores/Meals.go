@@ -219,7 +219,18 @@ func GetMealById(id int) (schemas.Meal, error) {
 	return meal, nil
 }
 
+var MEALS_CACHE_SIZE = 100000
+var MealsCache = map[int]schemas.Meal{}
+var MealsCacheQueue = utils.CreateQueue(MEALS_CACHE_SIZE)
+
 func GetMealByIdWithoutDishes(id int) (schemas.Meal, error) {
+	var meal schemas.Meal
+
+	meal, found := MealsCache[id]
+	if found {
+		return meal, nil
+	}
+
 	db, err := CreateConnection()
 	if err == nil {
 		defer db.Close()
@@ -228,7 +239,6 @@ func GetMealByIdWithoutDishes(id int) (schemas.Meal, error) {
 		return schemas.Meal{}, err
 	}
 
-	var meal schemas.Meal
 	var tagId int
 	err = db.QueryRow(`
 		select
@@ -242,7 +252,7 @@ func GetMealByIdWithoutDishes(id int) (schemas.Meal, error) {
 			end,
 			case
 			    when meals.tag_id is null
-			        then -1
+			        then -1 
 				else
 					meals.tag_id
 			end
@@ -285,6 +295,12 @@ func GetMealByIdWithoutDishes(id int) (schemas.Meal, error) {
 		meal.Id).Scan(
 		&meal.DishesAmount); err != nil {
 		return schemas.Meal{}, err
+	}
+
+	MealsCache[id] = meal
+	removedMeal, flag := MealsCacheQueue.Push(id)
+	if flag {
+		delete(MealsCache, removedMeal.(int))
 	}
 
 	return meal, nil
