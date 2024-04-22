@@ -1,12 +1,14 @@
 package handlers
 
 import (
-	"github.com/gin-contrib/sessions"
-	"github.com/gin-gonic/gin"
+	"fmt"
 	"net/http"
 	"zakroma_backend/middleware"
 	"zakroma_backend/schemas"
 	"zakroma_backend/stores"
+
+	"github.com/gin-contrib/sessions"
+	"github.com/gin-gonic/gin"
 )
 
 var tokens []string
@@ -77,5 +79,21 @@ func Register(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"token": token,
+	})
+}
+
+func GetName(c *gin.Context) {
+	session := sessions.Default(c)
+	hash := session.Get("hash")
+
+	name, surname, err := stores.GetUserInits(fmt.Sprint(hash))
+	if err != nil {
+		c.String(http.StatusBadRequest, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"firstName":  name,
+		"secondName": surname,
 	})
 }

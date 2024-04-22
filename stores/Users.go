@@ -2,9 +2,10 @@ package stores
 
 import (
 	"fmt"
-	"golang.org/x/crypto/bcrypt"
 	"zakroma_backend/schemas"
 	"zakroma_backend/utils"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 func Login(user schemas.User) (string, error) {
@@ -129,4 +130,29 @@ func GetUserIdByHash(hash string) (int, error) {
 	}
 
 	return id, nil
+}
+
+func GetUserInits(hash string) (string, string, error) {
+	db, err := CreateConnection()
+	if err == nil {
+		defer db.Close()
+	}
+	if err != nil {
+		return "", "", err
+	}
+
+	var name, surname string
+	if err = db.QueryRow(`
+		select
+			name, surname
+		from
+			users
+		where
+			user_hash = $1`,
+		hash).Scan(
+		&name, &surname); err != nil {
+		return "", "", err
+	}
+
+	return name, surname, nil
 }
