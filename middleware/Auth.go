@@ -25,8 +25,13 @@ func Auth(c *gin.Context) {
 		})
 		return
 	}
-
-	reqToken := strings.Split(bearerToken, " ")[1]
+	allToken := strings.Split(bearerToken, " ")
+	if len(allToken) != 2 {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"message": "wrong token",
+		})
+	}
+	reqToken := allToken[1]
 	claims := &Claims{}
 	tkn, err := jwt.ParseWithClaims(reqToken, claims, func(token *jwt.Token) (interface{}, error) {
 		return jwtKey, nil

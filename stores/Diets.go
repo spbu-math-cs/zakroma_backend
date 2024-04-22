@@ -323,6 +323,28 @@ func GetCurrentDiet(groupHash string) (schemas.Diet, error) {
 	return diet, nil
 }
 
+func GetCurrentDietRecipies(groupHash string) ([]string, error) {
+	diet, err := GetCurrentDiet(groupHash)
+	if err != nil {
+		return []string{}, err
+	}
+	dayDiet := diet.DayDiets[0]
+	cnt := 0
+	for _, meal := range dayDiet.Meals {
+		cnt += len(meal.Dishes)
+
+	}
+	ans := make([]string, cnt)
+	cnt = 0
+	for _, meal := range dayDiet.Meals {
+		for _, dish := range meal.Dishes {
+			ans[cnt] = dish.Dish.Recipe
+			cnt++
+		}
+	}
+	return ans, nil
+}
+
 func ChangeDietName(dietHash string, name string) error {
 	db, err := CreateConnection()
 	if err == nil {
