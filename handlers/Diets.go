@@ -66,6 +66,19 @@ func GetCurrentDiet(c *gin.Context) {
 	c.JSON(http.StatusOK, diet)
 }
 
+func GetCurrentDietRecipies(c *gin.Context) {
+	session := sessions.Default(c)
+	groupHash := session.Get("group")
+
+	recipies, err := stores.GetCurrentDietRecipies(fmt.Sprint(groupHash))
+	if err != nil {
+		c.String(http.StatusNotFound, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, recipies)
+}
+
 func ChangeDietName(c *gin.Context) {
 	type RequestBody struct {
 		DietHash string `json:"diet-hash"`

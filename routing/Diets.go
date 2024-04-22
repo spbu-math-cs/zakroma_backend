@@ -14,4 +14,5 @@ func DietsRouting(router *gin.RouterGroup) {
 	router.PATCH("/name", middleware.Auth, handlers.ChangeDietName)
 	router.GET("/list", middleware.Auth, handlers.GetGroupDiets)
 	router.GET("/products", middleware.Auth, handlers.GetDietProducts)
+	router.GET("/recipie", middleware.Auth, handlers.GetCurrentDietRecipies)
 }
