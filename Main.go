@@ -1,10 +1,15 @@
 package main
 
 import (
+	"zakroma_backend/routing"
+
+	docs "zakroma_backend/docs"
+
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
-	"zakroma_backend/routing"
+	swaggerfiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 func setupSession(router *gin.Engine) {
@@ -22,7 +27,13 @@ func runHttp(router *gin.Engine) {
 
 var secret = []byte("zakrooooooma_baccckendddd_secreeeeet")
 
+// @securityDefinitions.apikey Bearer
+// @in header
+// @name Authorization
+// @description Type "Bearer" followed by a space and JWT token.
 func main() {
+	docs.SwaggerInfo.BasePath = "/"
+
 	router := gin.Default()
 	router.Use(gin.Recovery())
 	setupSession(router)
@@ -37,6 +48,8 @@ func main() {
 	routing.DietsRouting(api.Group("/diets"))
 	routing.MealsRouting(api.Group("/meals"))
 	routing.GroupsRouting(api.Group("/groups"))
+
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 
 	runHttp(router)
 }

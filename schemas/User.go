@@ -7,5 +7,5 @@ type User struct {
 	Email     string `json:"email"`
 	Name      string `json:"name"`
 	Surname   string `json:"surname"`
-	BirthDate string `json:"birth-date"`
+	BirthDate string `json:"birth-date"` // В формате YYYY-MM-DD
 }
