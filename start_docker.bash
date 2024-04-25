@@ -19,9 +19,9 @@ cd database
 # запускаем докер-контейнер
 cd ..
 if [[ $* == *--build* ]]; then
-  sudo docker-compose up --build &> "$docker_output_path"
+  sudo docker compose up --build &> "$docker_output_path"
 else
-  sudo docker-compose up &> "$docker_output_path"
+  sudo docker compose up &> "$docker_output_path"
 fi
-sudo docker-compose down &> "$docker_output_path"
+sudo docker compose down &> "$docker_output_path"
 sudo systemctl start postgresql.service # возвращаем системный постгрес на место
