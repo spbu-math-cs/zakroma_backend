@@ -81,6 +81,7 @@ func GetDishByHash(hash string) (schemas.Dish, error) {
 			return schemas.Dish{}, err
 		}
 		dish.Products = append(dish.Products, product)
+		//TODO
 	}
 
 	return dish, nil

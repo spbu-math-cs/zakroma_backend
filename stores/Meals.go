@@ -118,6 +118,7 @@ func GetMealByHash(hash string) (schemas.Meal, error) {
 		}
 
 		meal.Dishes = append(meal.Dishes, mealDish)
+		//TODO
 	}
 
 	meal.DishesAmount = len(meal.Dishes)
@@ -212,6 +213,7 @@ func GetMealById(id int) (schemas.Meal, error) {
 		}
 
 		meal.Dishes = append(meal.Dishes, mealDish)
+		//TODO
 	}
 
 	meal.DishesAmount = len(meal.Dishes)

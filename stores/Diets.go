@@ -120,6 +120,7 @@ func GetDietByHash(hash string) (schemas.Diet, error) {
 		dayDiet.MealsAmount = len(dayDiet.Meals)
 
 		diet.DayDiets = append(diet.DayDiets, dayDiet)
+		//TODO
 	}
 
 	return diet, nil
@@ -188,6 +189,7 @@ func GetDietByHashWithoutDishes(hash string) (schemas.Diet, error) {
 		dayDiet.MealsAmount = len(dayDiet.Meals)
 
 		diet.DayDiets = append(diet.DayDiets, dayDiet)
+		//TODO
 	}
 
 	return diet, nil
@@ -255,6 +257,7 @@ func GetDietById(id int) (schemas.Diet, error) {
 		dayDiet.Meals = dayDiet.Meals[:min(3, len(dayDiet.Meals))]
 
 		diet.DayDiets = append(diet.DayDiets, dayDiet)
+		//TODO
 	}
 
 	return diet, nil
@@ -319,7 +322,7 @@ func GetCurrentDiet(groupHash string) (schemas.Diet, error) {
 
 	diet.DayDiets = diet.DayDiets[currentDay : currentDay+1]
 	diet.DayDiets[0].Meals = []schemas.Meal{}
-
+	//TODO
 	return diet, nil
 }
 

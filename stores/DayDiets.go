@@ -82,6 +82,7 @@ func GetDayDietById(id int) (schemas.DayDiet, error) {
 			return schemas.DayDiet{}, err
 		}
 		dayDiet.Meals = append(dayDiet.Meals, meal)
+		//TODO
 	}
 
 	return dayDiet, nil
@@ -140,6 +141,7 @@ func GetDayDietByIdWithoutDishes(id int) (schemas.DayDiet, error) {
 			return schemas.DayDiet{}, err
 		}
 		dayDiet.Meals = append(dayDiet.Meals, meal)
+		//TODO
 	}
 
 	return dayDiet, nil
