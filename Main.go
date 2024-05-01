@@ -48,6 +48,7 @@ func main() {
 	routing.DietsRouting(api.Group("/diets"))
 	routing.MealsRouting(api.Group("/meals"))
 	routing.GroupsRouting(api.Group("/groups"))
+	routing.UserRouting(api.Group("/user"))
 
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 

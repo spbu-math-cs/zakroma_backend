@@ -1,9 +1,10 @@
 package routing
 
 import (
-	"github.com/gin-gonic/gin"
 	"zakroma_backend/handlers"
 	"zakroma_backend/middleware"
+
+	"github.com/gin-gonic/gin"
 )
 
 func AuthRouting(router *gin.RouterGroup) {
