@@ -263,7 +263,28 @@ func MoveCartToStore(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 
+// GetGroupMembers godoc
+//
+// @Tags groups
+// @Accept json
+// @Produce json
+// @Success 200 {array} schemas.User
+// @Security Bearer
+// @Router /api/groups/members [get]
 func GetGroupMembers(c *gin.Context) {
 	session := sessions.Default(c)
+	groupHash := session.Get("group")
 
+	if groupHash == nil {
+		c.String(http.StatusBadRequest, "no current group set")
+		return
+	}
+
+	members, err := stores.GetGroupMembers(fmt.Sprint(groupHash))
+	if err != nil {
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, members)
 }

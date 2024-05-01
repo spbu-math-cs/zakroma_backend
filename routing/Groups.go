@@ -13,6 +13,7 @@ func GroupsRouting(router *gin.RouterGroup) {
 	router.POST("/diet/add", middleware.Auth, handlers.AddGroupDiet)
 	router.GET("/list", middleware.Auth, handlers.GetAllUserGroups)
 	router.PATCH("/change", middleware.Auth, handlers.ChangeCurrentGroup)
+	router.GET("/members", middleware.Auth, handlers.GetGroupMembers)
 
 	CartRouting(router.Group("/cart"))
 	StoreRouting(router.Group("/store"))

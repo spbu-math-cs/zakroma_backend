@@ -491,3 +491,37 @@ func MoveCartToStore(user string, group string) error {
 
 	return nil
 }
+
+func GetGroupMembers(groupHash string) ([]schemas.User, error) {
+	db, err := CreateConnection()
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
+
+	groupId, err := GetGroupIdByHash(groupHash)
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := db.Query(`
+        SELECT u.user_id, u.user_name
+        FROM users u
+        JOIN users_groups ug ON u.user_id = ug.user_id
+        WHERE ug.group_id = $1`, groupId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var users []schemas.User
+	for rows.Next() {
+		var user schemas.User
+		if err := rows.Scan(&user.Id, &user.Name); err != nil {
+			return nil, err
+		}
+		users = append(users, user)
+	}
+
+	return users, nil
+}
