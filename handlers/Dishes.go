@@ -1,11 +1,20 @@
 package handlers
 
 import (
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"zakroma_backend/stores"
+
+	"github.com/gin-gonic/gin"
 )
 
+// GetDishByHash godoc
+//
+// @Tags dishes
+// @Accept json
+// @Produce json
+// @Param hash path string true "Hash блюда"
+// @Success 200 {object} schemas.Dish
+// @Router /api/dishes/{hash} [get]
 func GetDishByHash(c *gin.Context) {
 	hash := c.Params.ByName("hash")
 	if len(hash) == 0 {
@@ -22,6 +31,15 @@ func GetDishByHash(c *gin.Context) {
 	c.JSON(http.StatusOK, dish)
 }
 
+// GetDishShortByHash godoc
+//
+// @Description **`products` и `recipe` пустые**
+// @Tags dishes
+// @Accept json
+// @Produce json
+// @Param hash path string true "Hash блюда"
+// @Success 200 {object} schemas.Dish
+// @Router /api/dishes/short/{hash} [get]
 func GetDishShortByHash(c *gin.Context) {
 	hash := c.Params.ByName("hash")
 	if len(hash) == 0 {
@@ -38,11 +56,21 @@ func GetDishShortByHash(c *gin.Context) {
 	c.JSON(http.StatusOK, dishShort)
 }
 
+// GetDishesShortByName godoc
+//
+// @Description Список базовых блюд, содеражщих в своем названии подстроку *name*
+// @Description (выборка с *range-begin* до *range-end*)
+// @Tags dishes
+// @Accept json
+// @Produce json
+// @Param data body handlers.GetDishesShortByName.RequestBody true "Тело запроса"
+// @Success 200 {array} schemas.Dish
+// @Router /api/dishes/name [get]
 func GetDishesShortByName(c *gin.Context) {
 	type RequestBody struct {
-		Name       string `json:"name"`
-		RangeBegin int    `json:"range-begin"`
-		RangeEnd   int    `json:"range-end"`
+		Name       string `json:"name" example:"салат"`    // Подстрока, которая должна быть в названии блюда
+		RangeBegin int    `json:"range-begin" example:"1"` // Начало диапазона (**нумерация с 1**)
+		RangeEnd   int    `json:"range-end" example:"5"`   // Конец диапазона
 	}
 
 	var requestBody RequestBody
@@ -57,11 +85,23 @@ func GetDishesShortByName(c *gin.Context) {
 	c.JSON(http.StatusOK, dishes)
 }
 
+// GetDishesShortByTags godoc
+//
+// @Description Список базовых блюд, обладающих **всеми** тегами из *tags*
+// @Description (выборка, с *range-begin* до *range-end*);
+// @Description Представлен в виде короткой информации о каждом.
+// @Description **`products` и `recipe` пустые**.
+// @Tags dishes
+// @Accept json
+// @Produce json
+// @Param data body handlers.GetDishesShortByTags.RequestBody true "Тело запроса"
+// @Success 200 {array} schemas.Dish
+// @Router /api/dishes/tags [get]
 func GetDishesShortByTags(c *gin.Context) {
 	type RequestBody struct {
-		Tags       []string `json:"tags"`
-		RangeBegin int      `json:"range-begin"`
-		RangeEnd   int      `json:"range-end"`
+		Tags       []string `json:"tags" example:"breakfast"`
+		RangeBegin int      `json:"range-begin" example:"1"` // Начало диапазона (**нумерация с 1**)
+		RangeEnd   int      `json:"range-end" example:"5"`   // Конец диапазона
 	}
 
 	var requestBody RequestBody

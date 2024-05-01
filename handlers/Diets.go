@@ -2,12 +2,21 @@ package handlers
 
 import (
 	"fmt"
-	"github.com/gin-contrib/sessions"
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"zakroma_backend/stores"
+
+	"github.com/gin-contrib/sessions"
+	"github.com/gin-gonic/gin"
 )
 
+// GetDietByHash godoc
+//
+// @Tags diets
+// @Accept json
+// @Produce json
+// @Param hash path string true "Hash диеты"
+// @Success 200 {object} schemas.Diet
+// @Router /api/diets/{hash} [get]
 func GetDietByHash(c *gin.Context) {
 	hash := c.Params.ByName("hash")
 	if len(hash) == 0 {
@@ -24,9 +33,21 @@ func GetDietByHash(c *gin.Context) {
 	c.JSON(http.StatusOK, diet)
 }
 
+// CreateDiet godoc
+//
+// @Tags diets
+// @Accept json
+// @Produce json
+// @Param data body handlers.CreateDiet.RequestBody true "Тело запроса"
+// @Success 200 {object} handlers.CreateDiet.ResponseBody
+// @Security Bearer
+// @Router /api/diets/create [post]
 func CreateDiet(c *gin.Context) {
 	type RequestBody struct {
-		Name string `json:"name"`
+		Name string `json:"name" example:"Сушка"`
+	}
+	type ResponseBody struct {
+		Hash string `json:"hash" example:"92bc3119092103d17059ba75ca19db9541d282e929c43cbb72de1231429d862d"`
 	}
 
 	var requestBody RequestBody
@@ -50,9 +71,17 @@ func CreateDiet(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"hash": hash})
+	c.JSON(http.StatusOK, ResponseBody{Hash: hash})
 }
 
+// GetCurrentDiet godoc
+//
+// @Tags diets
+// @Accept json
+// @Produce json
+// @Success 200 {object} schemas.Diet
+// @Security Bearer
+// @Router /api/diets/current [get]
 func GetCurrentDiet(c *gin.Context) {
 	session := sessions.Default(c)
 	groupHash := session.Get("group")
@@ -66,6 +95,14 @@ func GetCurrentDiet(c *gin.Context) {
 	c.JSON(http.StatusOK, diet)
 }
 
+// GetCurrentDietRecipies godoc
+//
+// @Tags diets
+// @Accept json
+// @Produce json
+// @Success 200 {array} string
+// @Security Bearer
+// @Router /api/diets/recepie [get]
 func GetCurrentDietRecipies(c *gin.Context) {
 	session := sessions.Default(c)
 	groupHash := session.Get("group")
@@ -79,10 +116,19 @@ func GetCurrentDietRecipies(c *gin.Context) {
 	c.JSON(http.StatusOK, recipies)
 }
 
+// ChangeDietName godoc
+//
+// @Tags diets
+// @Accept json
+// @Produce json
+// @Success 200
+// @Param data body handlers.ChangeDietName.RequestBody true "Тело запроса"
+// @Security Bearer
+// @Router /api/diets/name [patch]
 func ChangeDietName(c *gin.Context) {
 	type RequestBody struct {
-		DietHash string `json:"diet-hash"`
-		Name     string `json:"name"`
+		DietHash string `json:"diet-hash" example:"92bc3119092103d17059ba75ca19db9541d282e929c43cbb72de1231429d862d"`
+		Name     string `json:"name" example:"Сушка"`
 	}
 
 	var requestBody RequestBody
@@ -99,6 +145,14 @@ func ChangeDietName(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 
+// GetGroupDiets godoc
+//
+// @Tags diets
+// @Accept json
+// @Produce json
+// @Success 200 {array} string
+// @Security Bearer
+// @Router /api/diets/list [get]
 func GetGroupDiets(c *gin.Context) {
 	session := sessions.Default(c)
 	group := session.Get("group")
@@ -112,9 +166,18 @@ func GetGroupDiets(c *gin.Context) {
 	c.JSON(http.StatusOK, diets)
 }
 
+// ChangeCurrentDiet godoc
+//
+// @Tags diets
+// @Accept json
+// @Produce json
+// @Param data body handlers.ChangeCurrentDiet.RequestBody true "Тело запроса"
+// @Success 200
+// @Security Bearer
+// @Router /api/diets/change [patch]
 func ChangeCurrentDiet(c *gin.Context) {
 	type RequestBody struct {
-		DietHash string `json:"diet-hash"`
+		DietHash string `json:"diet-hash" example:"92bc3119092103d17059ba75ca19db9541d282e929c43cbb72de1231429d862d"`
 	}
 
 	var requestBody RequestBody
@@ -135,9 +198,18 @@ func ChangeCurrentDiet(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 
+// GetDietProducts godoc
+//
+// @Tags diets
+// @Accept json
+// @Produce json
+// @Param data body handlers.GetDietProducts.RequestBody true "Тело запроса"
+// @Success 200 {array} schemas.DishProduct
+// @Security Bearer
+// @Router /api/diets/products [get]
 func GetDietProducts(c *gin.Context) {
 	type RequestBody struct {
-		DietHash string `json:"diet-hash"`
+		DietHash string `json:"diet-hash" example:"92bc3119092103d17059ba75ca19db9541d282e929c43cbb72de1231429d862d"`
 		Days     []int  `json:"days"`
 	}
 

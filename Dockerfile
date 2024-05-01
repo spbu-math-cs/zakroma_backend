@@ -7,8 +7,10 @@ WORKDIR /build
 COPY go.mod .
 COPY go.sum .
 RUN go mod download
+RUN go install github.com/swaggo/swag/cmd/swag@v1.16.3
 
 COPY . .
+RUN swag init -g Main.go
 
 EXPOSE ${SERVER_PORT}
 

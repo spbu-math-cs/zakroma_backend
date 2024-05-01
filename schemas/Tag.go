@@ -1,6 +1,6 @@
 package schemas
 
 type Tag struct {
-	TagId int    `json:"tag-id"`
-	Name  string `json:"tag"`
+	TagId int    `json:"tag-id" example:"1"`
+	Name  string `json:"tag" example:"завтрак"`
 }

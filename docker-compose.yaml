@@ -2,7 +2,7 @@ version: '3.7'
 networks:
   shared-network:
     driver: bridge
-    
+
 services:
   zakroma_db:
     container_name: zakroma_db
@@ -16,7 +16,7 @@ services:
     ports:
       - ${DB_PORT}:${DB_PORT}
     volumes:
-      - ./database/scripts/:/docker-entrypoint-initdb.d # initdb scripts 
+      - ./database/scripts/:/docker-entrypoint-initdb.d # initdb scripts
 
   zakroma_backend:
     image: zakroma_backend:latest
@@ -26,6 +26,10 @@ services:
     build:
       dockerfile: Dockerfile
       context: .
+    develop:
+      watch:
+        - action: rebuild
+          path: .
     environment:
       SERVER_HOST: ${SERVER_HOST}
       SERVER_PORT: ${SERVER_PORT}
@@ -33,4 +37,3 @@ services:
       - ${SERVER_PORT}:${SERVER_PORT}
     depends_on:
       - zakroma_db
-
