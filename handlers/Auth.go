@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"fmt"
 	"net/http"
 	"zakroma_backend/middleware"
 	"zakroma_backend/schemas"
@@ -128,21 +127,5 @@ func Register(c *gin.Context) {
 
 	c.JSON(http.StatusOK, authResponseBody{
 		Token: token,
-	})
-}
-
-func GetName(c *gin.Context) {
-	session := sessions.Default(c)
-	hash := session.Get("hash")
-
-	name, surname, err := stores.GetUserInits(fmt.Sprint(hash))
-	if err != nil {
-		c.String(http.StatusBadRequest, err.Error())
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"firstName":  name,
-		"secondName": surname,
 	})
 }

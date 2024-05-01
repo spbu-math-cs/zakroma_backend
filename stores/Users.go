@@ -144,7 +144,7 @@ func GetUserInits(hash string) (string, string, error) {
 	var name, surname string
 	if err = db.QueryRow(`
 		select
-			name, surname
+			user_name, user_surname
 		from
 			users
 		where
