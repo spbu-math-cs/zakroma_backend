@@ -262,3 +262,8 @@ func MoveCartToStore(c *gin.Context) {
 
 	c.Status(http.StatusOK)
 }
+
+func GetGroupMembers(c *gin.Context) {
+	session := sessions.Default(c)
+
+}
