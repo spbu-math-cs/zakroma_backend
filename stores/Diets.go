@@ -2,9 +2,10 @@ package stores
 
 import (
 	"fmt"
-	"github.com/lib/pq"
 	"zakroma_backend/schemas"
 	"zakroma_backend/utils"
+
+	"github.com/lib/pq"
 )
 
 func GetDietHashById(id int) (string, error) {
@@ -112,75 +113,6 @@ func GetDietByHash(hash string) (schemas.Diet, error) {
 			return schemas.Diet{}, err
 		}
 		dayDiet, err := GetDayDietById(dayDietId)
-		if err != nil {
-			return schemas.Diet{}, err
-		}
-
-		dayDiet.Index = index
-		dayDiet.MealsAmount = len(dayDiet.Meals)
-
-		diet.DayDiets = append(diet.DayDiets, dayDiet)
-		//TODO
-	}
-
-	return diet, nil
-}
-
-func GetDietByHashWithoutDishes(hash string) (schemas.Diet, error) {
-	db, err := CreateConnection()
-	if err == nil {
-		defer db.Close()
-	}
-	if err != nil {
-		return schemas.Diet{}, err
-	}
-
-	var diet schemas.Diet
-	err = db.QueryRow(`
-		select
-			diet_id,
-			diet_hash,
-			diet_name
-		from
-			diet
-		where
-			diet_hash = $1`,
-		hash).Scan(
-		&diet.Id,
-		&diet.Hash,
-		&diet.Name)
-	if err != nil {
-		return schemas.Diet{}, err
-	}
-
-	fmt.Println(diet.Id, diet.Hash, diet.Name)
-
-	dayDietsRows, err := db.
-		Query(`
-			select
-			    diet_day_id,
-			    index
-			from
-			    diet_day_diet
-			where
-			    diet_id = $1
-			order by
-			    index`,
-			diet.Id)
-	defer dayDietsRows.Close()
-	if err != nil {
-		return schemas.Diet{}, err
-	}
-
-	for dayDietsRows.Next() {
-		var dayDietId int
-		var index int
-		if err = dayDietsRows.Scan(
-			&dayDietId,
-			&index); err != nil {
-			return schemas.Diet{}, err
-		}
-		dayDiet, err := GetDayDietByIdWithoutDishes(dayDietId)
 		if err != nil {
 			return schemas.Diet{}, err
 		}

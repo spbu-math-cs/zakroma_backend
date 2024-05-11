@@ -2,6 +2,7 @@ package schemas
 
 type Product struct {
 	Id                int     `json:"id"`
+	Hash              string  `json:"hash"`
 	Name              string  `json:"name"`
 	Calories          float32 `json:"calories"`
 	Proteins          float32 `json:"proteins"`

@@ -99,6 +99,7 @@ CREATE TABLE "groups_diets" (
 
 CREATE TABLE "products" (
   "product_id" serial PRIMARY KEY,
+  "product_hash" varchar(64),
   "product_name" varchar(64),
   "proteins" numeric,
   "carbs" numeric,

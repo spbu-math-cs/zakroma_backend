@@ -108,7 +108,7 @@ func GetMealByHash(hash string) (schemas.Meal, error) {
 		}
 
 		meal.Dishes = append(meal.Dishes, dishHash)
-		//TODO
+		//TODO (вроде сделал)
 	}
 
 	meal.DishesAmount = len(meal.Dishes)
@@ -174,36 +174,26 @@ func GetMealById(id int) (schemas.Meal, error) {
 
 	dishesRows, err := db.Query(`
 		select
-			meals_dishes.dish_id,
-			meals_dishes.portions
+			dishes.dish_hash
 		from
-			meals_dishes
+			meals_dishes join dishes on meals_dishes.dish_id = dishes.dish_id
 		where
 			meals_dishes.meal_id = $1`,
-	)
+		meal.Id)
 	if err != nil {
 		return schemas.Meal{}, err
 	}
 	defer dishesRows.Close()
 
 	for dishesRows.Next() {
-		var dishId int
-		var portions float32
+		var dishHash string
 		if err = dishesRows.Scan(
-			&dishId,
-			&portions); err != nil {
+			&dishHash); err != nil {
 			return schemas.Meal{}, err
 		}
 
-		var mealDish schemas.MealDish
-		mealDish.Portions = portions
-		mealDish.Dish, err = GetDishShortById(dishId)
-		if err != nil {
-			return schemas.Meal{}, err
-		}
-
-		meal.Dishes = append(meal.Dishes, mealDish)
-		//TODO
+		meal.Dishes = append(meal.Dishes, dishHash)
+		//TODO (вроде сделал)
 	}
 
 	meal.DishesAmount = len(meal.Dishes)
@@ -214,89 +204,6 @@ func GetMealById(id int) (schemas.Meal, error) {
 var MEALS_CACHE_SIZE = 100000
 var MealsCache = map[int]schemas.Meal{}
 var MealsCacheQueue = utils.CreateQueue(MEALS_CACHE_SIZE)
-
-func GetMealByIdWithoutDishes(id int) (schemas.Meal, error) {
-	var meal schemas.Meal
-
-	meal, found := MealsCache[id]
-	if found {
-		return meal, nil
-	}
-
-	db, err := CreateConnection()
-	if err == nil {
-		defer db.Close()
-	}
-	if err != nil {
-		return schemas.Meal{}, err
-	}
-
-	var tagId int
-	err = db.QueryRow(`
-		select
-			meals.meal_id,
-			meals.meal_hash,
-			case 
-			    when meals.meal_name is null
-			        then ''
-				else
-				    meals.meal_name
-			end,
-			case
-			    when meals.tag_id is null
-			        then -1 
-				else
-					meals.tag_id
-			end
-		from
-			meals
-		where
-			meals.meal_id = $1`,
-		id).Scan(
-		&meal.Id,
-		&meal.Hash,
-		&meal.Name,
-		&tagId)
-	if err != nil {
-		return schemas.Meal{}, err
-	}
-	if len(meal.Name) == 0 {
-		var tag string
-		err = db.QueryRow(`
-			select
-				tag
-			from
-				tags_for_meals
-			where
-				tag_id = $1`,
-			tagId).Scan(
-			&tag)
-		if err != nil {
-			return schemas.Meal{}, err
-		}
-		meal.Name = tag
-	}
-
-	if err := db.QueryRow(`
-		select
-		    count(*)
-		from
-			meals_dishes
-		where
-			meals_dishes.meal_id = $1`,
-		meal.Id).Scan(
-		&meal.DishesAmount); err != nil {
-		return schemas.Meal{}, err
-	}
-
-	MealsCache[id] = meal
-	removedMeal, flag := MealsCacheQueue.Push(id)
-	if flag {
-		delete(MealsCache, removedMeal.(int))
-	}
-
-	return meal, nil
-}
 
 func CreateMeal(dietHash string, dayDietIndex int, name string) (string, error) {
 	db, err := CreateConnection()
