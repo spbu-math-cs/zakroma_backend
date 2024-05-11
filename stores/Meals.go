@@ -89,10 +89,9 @@ func GetMealByHash(hash string) (schemas.Meal, error) {
 
 	dishesRows, err := db.Query(`
 		select
-			meals_dishes.dish_id,
-			meals_dishes.portions
+			dishes.dish_hash
 		from
-			meals_dishes
+			meals_dishes join dishes on meals_dishes.dish_id = dishes.dish_id
 		where
 			meals_dishes.meal_id = $1`,
 		meal.Id)
@@ -102,22 +101,13 @@ func GetMealByHash(hash string) (schemas.Meal, error) {
 	defer dishesRows.Close()
 
 	for dishesRows.Next() {
-		var dishId int
-		var portions float32
+		var dishHash string
 		if err = dishesRows.Scan(
-			&dishId,
-			&portions); err != nil {
+			&dishHash); err != nil {
 			return schemas.Meal{}, err
 		}
 
-		var mealDish schemas.MealDish
-		mealDish.Portions = portions
-		mealDish.Dish, err = GetDishShortById(dishId)
-		if err != nil {
-			return schemas.Meal{}, err
-		}
-
-		meal.Dishes = append(meal.Dishes, mealDish)
+		meal.Dishes = append(meal.Dishes, dishHash)
 		//TODO
 	}
 
