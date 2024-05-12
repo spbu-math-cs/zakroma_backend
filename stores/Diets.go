@@ -112,16 +112,69 @@ func GetDietByHash(hash string) (schemas.Diet, error) {
 			&index); err != nil {
 			return schemas.Diet{}, err
 		}
-		dayDiet, err := GetDayDietById(dayDietId)
-		if err != nil {
+
+		diet.DayDiets = append(diet.DayDiets, dayDietId)
+	}
+
+	return diet, nil
+}
+
+func GetDietByHashWithoutDishes(hash string) (schemas.Diet, error) {
+	db, err := CreateConnection()
+	if err == nil {
+		defer db.Close()
+	}
+	if err != nil {
+		return schemas.Diet{}, err
+	}
+
+	var diet schemas.Diet
+	err = db.QueryRow(`
+		select
+			diet_id,
+			diet_hash,
+			diet_name
+		from
+			diet
+		where
+			diet_hash = $1`,
+		hash).Scan(
+		&diet.Id,
+		&diet.Hash,
+		&diet.Name)
+	if err != nil {
+		return schemas.Diet{}, err
+	}
+
+	fmt.Println(diet.Id, diet.Hash, diet.Name)
+
+	dayDietsRows, err := db.
+		Query(`
+			select
+			    diet_day_id,
+			    index
+			from
+			    diet_day_diet
+			where
+			    diet_id = $1
+			order by
+			    index`,
+			diet.Id)
+	defer dayDietsRows.Close()
+	if err != nil {
+		return schemas.Diet{}, err
+	}
+
+	for dayDietsRows.Next() {
+		var dayDietId int
+		var index int
+		if err = dayDietsRows.Scan(
+			&dayDietId,
+			&index); err != nil {
 			return schemas.Diet{}, err
 		}
 
-		dayDiet.Index = index
-		dayDiet.MealsAmount = len(dayDiet.Meals)
-
-		diet.DayDiets = append(diet.DayDiets, dayDiet)
-		//TODO
+		diet.DayDiets = append(diet.DayDiets, dayDietId)
 	}
 
 	return diet, nil
@@ -179,17 +232,8 @@ func GetDietById(id int) (schemas.Diet, error) {
 			&index); err != nil {
 			return schemas.Diet{}, err
 		}
-		dayDiet, err := GetDayDietById(dayDietId)
-		if err != nil {
-			return schemas.Diet{}, err
-		}
 
-		dayDiet.Index = index
-		dayDiet.MealsAmount = len(dayDiet.Meals)
-		dayDiet.Meals = dayDiet.Meals[:min(3, len(dayDiet.Meals))]
-
-		diet.DayDiets = append(diet.DayDiets, dayDiet)
-		//TODO
+		diet.DayDiets = append(diet.DayDiets, dayDietId)
 	}
 
 	return diet, nil
@@ -253,8 +297,7 @@ func GetCurrentDiet(groupHash string) (schemas.Diet, error) {
 	currentDay := 3
 
 	diet.DayDiets = diet.DayDiets[currentDay : currentDay+1]
-	diet.DayDiets[0].Meals = []schemas.Meal{}
-	//TODO
+
 	return diet, nil
 }
 

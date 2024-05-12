@@ -1,6 +1,7 @@
 package stores
 
 import (
+	"fmt"
 	"zakroma_backend/schemas"
 )
 
@@ -82,6 +83,64 @@ func GetDayDietById(id int) (schemas.DayDiet, error) {
 		}
 		dayDiet.Meals = append(dayDiet.Meals, meal.Hash)
 		//TODO
+	}
+
+	return dayDiet, nil
+}
+
+func GetDayDietByIdWithoutDishes(id int) (schemas.DayDiet, error) {
+	db, err := CreateConnection()
+	if err == nil {
+		defer db.Close()
+	}
+	if err != nil {
+		return schemas.DayDiet{}, err
+	}
+
+	var dayDiet schemas.DayDiet
+	dayDiet.Id = id
+	if err = db.QueryRow(`
+		select
+			diet_day_name
+		from
+		    diet_day
+		where
+		    diet_day_id = $1`,
+		id).Scan(
+		&dayDiet.Name); err != nil {
+		return schemas.DayDiet{}, err
+	}
+
+	fmt.Println(id, dayDiet.Name)
+
+	mealsIdRows, err := db.Query(`
+		select
+			diet_day_meals.meal_id
+		from
+			diet_day_meals,
+			meals
+		where
+			diet_day_id = $1 and
+			diet_day_meals.meal_id = meals.meal_id
+		order by
+			index`,
+		id)
+	if err != nil {
+		return schemas.DayDiet{}, err
+	}
+	defer mealsIdRows.Close()
+
+	for mealsIdRows.Next() {
+		var mealId int
+		if err = mealsIdRows.Scan(
+			&mealId); err != nil {
+			return schemas.DayDiet{}, err
+		}
+		meal, err := GetMealByIdWithoutDishes(mealId)
+		if err != nil {
+			return schemas.DayDiet{}, err
+		}
+		dayDiet.Meals = append(dayDiet.Meals, meal.Hash)
 	}
 
 	return dayDiet, nil
