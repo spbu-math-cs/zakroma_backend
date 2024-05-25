@@ -3,6 +3,7 @@ package handlers
 import (
 	"fmt"
 	"net/http"
+	"zakroma_backend/schemas"
 	"zakroma_backend/stores"
 
 	"github.com/gin-contrib/sessions"
@@ -74,6 +75,67 @@ func CreateDiet(c *gin.Context) {
 	c.JSON(http.StatusOK, ResponseBody{Hash: hash})
 }
 
+func GetDietByHashWithoutDishes(hash string) (schemas.Diet, error) {
+	db, err := stores.CreateConnection()
+	if err == nil {
+		defer db.Close()
+	}
+	if err != nil {
+		return schemas.Diet{}, err
+	}
+
+	var diet schemas.Diet
+	err = db.QueryRow(`
+		select
+			diet_id,
+			diet_hash,
+			diet_name
+		from
+			diet
+		where
+			diet_hash = $1`,
+		hash).Scan(
+		&diet.Id,
+		&diet.Hash,
+		&diet.Name)
+	if err != nil {
+		return schemas.Diet{}, err
+	}
+
+	fmt.Println(diet.Id, diet.Hash, diet.Name)
+
+	dayDietsRows, err := db.
+		Query(`
+			select
+			    diet_day_id,
+			    index
+			from
+			    diet_day_diet
+			where
+			    diet_id = $1
+			order by
+			    index`,
+			diet.Id)
+	defer dayDietsRows.Close()
+	if err != nil {
+		return schemas.Diet{}, err
+	}
+
+	for dayDietsRows.Next() {
+		var dayDietId int
+		var index int
+		if err = dayDietsRows.Scan(
+			&dayDietId,
+			&index); err != nil {
+			return schemas.Diet{}, err
+		}
+
+		diet.DayDiets = append(diet.DayDiets, dayDietId)
+	}
+
+	return diet, nil
+}
+
 // GetCurrentDiet godoc
 //
 // @Tags diets
@@ -87,6 +149,7 @@ func GetCurrentDiet(c *gin.Context) {
 	groupHash := session.Get("group")
 
 	diet, err := stores.GetCurrentDiet(fmt.Sprint(groupHash))
+	c.JSON(http.StatusOK, diet)
 	if err != nil {
 		c.String(http.StatusNotFound, err.Error())
 		return
