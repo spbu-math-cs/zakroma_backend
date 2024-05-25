@@ -74,7 +74,8 @@ func GetDietByHash(hash string) (schemas.Diet, error) {
 		select
 			diet_id,
 			diet_hash,
-			diet_name
+			diet_name,
+			diet_is_personal
 		from
 			diet
 		where
@@ -82,7 +83,8 @@ func GetDietByHash(hash string) (schemas.Diet, error) {
 		hash).Scan(
 		&diet.Id,
 		&diet.Hash,
-		&diet.Name)
+		&diet.Name,
+		&diet.IsPersonal)
 	if err != nil {
 		return schemas.Diet{}, err
 	}
@@ -133,7 +135,8 @@ func GetDietByHashWithoutDishes(hash string) (schemas.Diet, error) {
 		select
 			diet_id,
 			diet_hash,
-			diet_name
+			diet_name,
+			diet_is_personal
 		from
 			diet
 		where
@@ -141,7 +144,8 @@ func GetDietByHashWithoutDishes(hash string) (schemas.Diet, error) {
 		hash).Scan(
 		&diet.Id,
 		&diet.Hash,
-		&diet.Name)
+		&diet.Name,
+		&diet.IsPersonal)
 	if err != nil {
 		return schemas.Diet{}, err
 	}
@@ -194,7 +198,8 @@ func GetDietById(id int) (schemas.Diet, error) {
 		select
 			diet_id,
 			diet_hash,
-			diet_name
+			diet_name,
+			diet_is_personal
 		from
 			diet
 		where
@@ -202,7 +207,8 @@ func GetDietById(id int) (schemas.Diet, error) {
 		id).Scan(
 		&diet.Id,
 		&diet.Hash,
-		&diet.Name)
+		&diet.Name,
+		&diet.IsPersonal)
 	if err != nil {
 		return schemas.Diet{}, err
 	}
@@ -269,7 +275,7 @@ func CreateDiet(name string, groupHash string) (string, error) {
 	}
 
 	for index := 0; index < 7; index++ {
-		_, err := CreateDayDiet(id, index, DefaultDayDietName[index])
+		_, err := CreateDayDiet(id, index, DefaultDayDietName[index], false)
 		if err != nil {
 			return "", err
 		}

@@ -88,7 +88,8 @@ CREATE TABLE "meals_dishes" (
 CREATE TABLE "diet" (
   "diet_id" serial PRIMARY KEY,
   "diet_name" varchar(64),
-  "diet_hash" varchar(64)
+  "diet_hash" varchar(64),
+  "diet_is_personal" boolean
 );
 
 CREATE TABLE "groups_diets" (

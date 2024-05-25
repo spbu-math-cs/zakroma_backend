@@ -26,6 +26,7 @@ func GetDietByHash(c *gin.Context) {
 	}
 
 	diet, err := stores.GetDietByHashWithoutDishes(hash)
+	diet.IsPersonal = false
 	if err != nil {
 		c.String(http.StatusNotFound, err.Error())
 		return

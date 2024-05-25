@@ -82,7 +82,6 @@ func GetDayDietById(id int) (schemas.DayDiet, error) {
 			return schemas.DayDiet{}, err
 		}
 		dayDiet.Meals = append(dayDiet.Meals, meal.Hash)
-		//TODO
 	}
 
 	return dayDiet, nil
@@ -146,7 +145,7 @@ func GetDayDietByIdWithoutDishes(id int) (schemas.DayDiet, error) {
 	return dayDiet, nil
 }
 
-func CreateDayDiet(dietId int, index int, name string) (int, error) {
+func CreateDayDiet(dietId int, index int, name string, is_personal bool) (int, error) {
 	db, err := CreateConnection()
 	if err == nil {
 		defer db.Close()
@@ -170,12 +169,12 @@ func CreateDayDiet(dietId int, index int, name string) (int, error) {
 
 	if err = db.QueryRow(`
 		insert into
-			diet_day_diet(diet_id, diet_day_id, index)
+			diet_day_diet(diet_id, diet_day_id, index, diet_is_personal)
 		values
-			($1, $2, $3)
+			($1, $2, $3, $4)
 		returning
 			diet_day_id`,
-		dietId, dayDietId, index).Scan(
+		dietId, dayDietId, index, is_personal).Scan(
 		&dayDietId); err != nil {
 		return -1, err
 	}
