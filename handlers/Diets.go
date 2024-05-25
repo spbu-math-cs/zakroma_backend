@@ -149,7 +149,6 @@ func GetCurrentDiet(c *gin.Context) {
 	groupHash := session.Get("group")
 
 	diet, err := stores.GetCurrentDiet(fmt.Sprint(groupHash))
-	c.JSON(http.StatusOK, diet)
 	if err != nil {
 		c.String(http.StatusNotFound, err.Error())
 		return

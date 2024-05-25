@@ -308,9 +308,15 @@ func GetCurrentDietRecipies(groupHash string) ([]string, error) {
 	}
 	dayDietId := diet.DayDiets[0]
 	cnt := 0
-	dayDiet, _ := GetDayDietById(dayDietId)
+	dayDiet, err := GetDayDietById(dayDietId)
+	if err != nil {
+		return []string{}, err
+	}
 	for _, mealHash := range dayDiet.Meals {
-		meal, _ := GetMealByHash(mealHash)
+		meal, err := GetMealByHash(mealHash)
+		if err != nil {
+			return []string{}, err
+		}
 		cnt += len(meal.Dishes)
 	}
 	ans := make([]string, cnt)
