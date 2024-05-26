@@ -13,8 +13,6 @@ services:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
-    ports:
-      - ${DB_PORT}:${DB_PORT}
     volumes:
       - ./database/scripts/:/docker-entrypoint-initdb.d # initdb scripts
 
@@ -33,7 +31,5 @@ services:
     environment:
       SERVER_HOST: ${SERVER_HOST}
       SERVER_PORT: ${SERVER_PORT}
-    ports:
-      - ${SERVER_PORT}:${SERVER_PORT}
     depends_on:
       - zakroma_db
