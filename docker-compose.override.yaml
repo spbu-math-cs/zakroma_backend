@@ -1,0 +1,4 @@
+services:
+  zakroma_backend:
+    ports:
+      - ${SERVER_PORT}:${SERVER_PORT}
