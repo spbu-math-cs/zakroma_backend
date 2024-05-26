@@ -247,7 +247,7 @@ func GetDietById(id int) (schemas.Diet, error) {
 
 var DefaultDayDietName = [7]string{"Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"}
 
-func CreateDiet(name string, groupHash string) (string, error) {
+func CreateDiet(name string, groupHash string, isPersonal bool) (string, error) {
 	db, err := CreateConnection()
 	if err == nil {
 		defer db.Close()
@@ -264,18 +264,18 @@ func CreateDiet(name string, groupHash string) (string, error) {
 	id := -1
 	if err = db.QueryRow(`
 		insert into
-			diet(diet_name, diet_hash)
+			diet(diet_name, diet_hash, diet_is_personal)
 		values
-			($1, $2)
+			($1, $2, $3)
 		returning
 		    diet_id`,
-		name, hash).Scan(
+		name, hash, isPersonal).Scan(
 		&id); err != nil {
 		return "", err
 	}
 
 	for index := 0; index < 7; index++ {
-		_, err := CreateDayDiet(id, index, DefaultDayDietName[index], false)
+		_, err := CreateDayDiet(id, index, DefaultDayDietName[index])
 		if err != nil {
 			return "", err
 		}

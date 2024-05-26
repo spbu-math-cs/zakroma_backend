@@ -62,7 +62,7 @@ func CreateDiet(c *gin.Context) {
 	groupHash := session.Get("group")
 	user := session.Get("hash")
 
-	hash, err := stores.CreateDiet(requestBody.Name, fmt.Sprint(groupHash))
+	hash, err := stores.CreateDiet(requestBody.Name, fmt.Sprint(groupHash), false)
 	if err != nil {
 		c.String(http.StatusInternalServerError, err.Error())
 		return
@@ -269,7 +269,7 @@ func ChangeCurrentDiet(c *gin.Context) {
 // @Param data body handlers.GetDietProducts.RequestBody true "Тело запроса"
 // @Success 200 {array} schemas.DishProduct
 // @Security Bearer
-// @Router /api/diets/products [get]
+// @Router /api/diets/products [post]
 func GetDietProducts(c *gin.Context) {
 	type RequestBody struct {
 		DietHash string `json:"diet-hash" example:"92bc3119092103d17059ba75ca19db9541d282e929c43cbb72de1231429d862d"`
