@@ -55,10 +55,7 @@ func GetDishByHash(hash string) (schemas.Dish, error) {
 
 	productsRows, err := db.Query(`
 		select
-			products.product_id,
-			products.product_name,				
-			products_dishes.amount,
-			products.unit_of_measurement
+			products.product_hash,
 		from
 			products_dishes,
 			products
@@ -72,15 +69,13 @@ func GetDishByHash(hash string) (schemas.Dish, error) {
 	defer productsRows.Close()
 
 	for productsRows.Next() {
-		var product schemas.DishProduct
+		var productHash string
 		if err = productsRows.Scan(
-			&product.ProductId,
-			&product.Name,
-			&product.Amount,
-			&product.UnitOfMeasurement); err != nil {
+			&productHash); err != nil {
 			return schemas.Dish{}, err
 		}
-		dish.Products = append(dish.Products, product)
+		dish.Products = append(dish.Products, productHash)
+		//TODO (вроде сделал)
 	}
 
 	return dish, nil

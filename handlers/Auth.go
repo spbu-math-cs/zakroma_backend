@@ -8,6 +8,8 @@ import (
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
+
+	"fmt"
 )
 
 var tokens []string
@@ -89,7 +91,7 @@ func Register(c *gin.Context) {
 		Email     string `json:"email" example:"example@gmail.com"`
 		Name      string `json:"name" example:"Ivan"`
 		Surname   string `json:"surname" example:"Ivanov"`
-		BirthDate string `json:"birth-date" example:"1970-00-00"` // В формате YYYY-MM-DD
+		BirthDate string `json:"birth-date" example:"1970-01-01"` // В формате YYYY-MM-DD
 	}
 
 	var body RequestBody
@@ -124,6 +126,17 @@ func Register(c *gin.Context) {
 	}
 
 	token, err := generateToken(user.Email)
+	if err != nil {
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	dietHash, err := stores.CreateDiet("Личная", fmt.Sprint(user.Hash), true)
+	if err != nil {
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	stores.ChangeCurrentDiet(user.Hash, user.Hash, dietHash)
 
 	c.JSON(http.StatusOK, authResponseBody{
 		Token: token,

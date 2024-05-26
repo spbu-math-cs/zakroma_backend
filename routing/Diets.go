@@ -1,9 +1,10 @@
 package routing
 
 import (
-	"github.com/gin-gonic/gin"
 	"zakroma_backend/handlers"
 	"zakroma_backend/middleware"
+
+	"github.com/gin-gonic/gin"
 )
 
 func DietsRouting(router *gin.RouterGroup) {
@@ -13,6 +14,6 @@ func DietsRouting(router *gin.RouterGroup) {
 	router.PATCH("/change", middleware.Auth, handlers.ChangeCurrentDiet)
 	router.PATCH("/name", middleware.Auth, handlers.ChangeDietName)
 	router.GET("/list", middleware.Auth, handlers.GetGroupDiets)
-	router.GET("/products", middleware.Auth, handlers.GetDietProducts)
+	router.POST("/products", middleware.Auth, handlers.GetDietProducts)
 	router.GET("/recipie", middleware.Auth, handlers.GetCurrentDietRecipies)
 }

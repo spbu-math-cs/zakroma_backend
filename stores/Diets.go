@@ -2,9 +2,10 @@ package stores
 
 import (
 	"fmt"
-	"github.com/lib/pq"
 	"zakroma_backend/schemas"
 	"zakroma_backend/utils"
+
+	"github.com/lib/pq"
 )
 
 func GetDietHashById(id int) (string, error) {
@@ -73,7 +74,8 @@ func GetDietByHash(hash string) (schemas.Diet, error) {
 		select
 			diet_id,
 			diet_hash,
-			diet_name
+			diet_name,
+			diet_is_personal
 		from
 			diet
 		where
@@ -81,7 +83,8 @@ func GetDietByHash(hash string) (schemas.Diet, error) {
 		hash).Scan(
 		&diet.Id,
 		&diet.Hash,
-		&diet.Name)
+		&diet.Name,
+		&diet.IsPersonal)
 	if err != nil {
 		return schemas.Diet{}, err
 	}
@@ -111,15 +114,8 @@ func GetDietByHash(hash string) (schemas.Diet, error) {
 			&index); err != nil {
 			return schemas.Diet{}, err
 		}
-		dayDiet, err := GetDayDietById(dayDietId)
-		if err != nil {
-			return schemas.Diet{}, err
-		}
 
-		dayDiet.Index = index
-		dayDiet.MealsAmount = len(dayDiet.Meals)
-
-		diet.DayDiets = append(diet.DayDiets, dayDiet)
+		diet.DayDiets = append(diet.DayDiets, dayDietId)
 	}
 
 	return diet, nil
@@ -139,7 +135,8 @@ func GetDietByHashWithoutDishes(hash string) (schemas.Diet, error) {
 		select
 			diet_id,
 			diet_hash,
-			diet_name
+			diet_name,
+			diet_is_personal
 		from
 			diet
 		where
@@ -147,7 +144,8 @@ func GetDietByHashWithoutDishes(hash string) (schemas.Diet, error) {
 		hash).Scan(
 		&diet.Id,
 		&diet.Hash,
-		&diet.Name)
+		&diet.Name,
+		&diet.IsPersonal)
 	if err != nil {
 		return schemas.Diet{}, err
 	}
@@ -179,15 +177,8 @@ func GetDietByHashWithoutDishes(hash string) (schemas.Diet, error) {
 			&index); err != nil {
 			return schemas.Diet{}, err
 		}
-		dayDiet, err := GetDayDietByIdWithoutDishes(dayDietId)
-		if err != nil {
-			return schemas.Diet{}, err
-		}
 
-		dayDiet.Index = index
-		dayDiet.MealsAmount = len(dayDiet.Meals)
-
-		diet.DayDiets = append(diet.DayDiets, dayDiet)
+		diet.DayDiets = append(diet.DayDiets, dayDietId)
 	}
 
 	return diet, nil
@@ -207,7 +198,8 @@ func GetDietById(id int) (schemas.Diet, error) {
 		select
 			diet_id,
 			diet_hash,
-			diet_name
+			diet_name,
+			diet_is_personal
 		from
 			diet
 		where
@@ -215,7 +207,8 @@ func GetDietById(id int) (schemas.Diet, error) {
 		id).Scan(
 		&diet.Id,
 		&diet.Hash,
-		&diet.Name)
+		&diet.Name,
+		&diet.IsPersonal)
 	if err != nil {
 		return schemas.Diet{}, err
 	}
@@ -245,16 +238,8 @@ func GetDietById(id int) (schemas.Diet, error) {
 			&index); err != nil {
 			return schemas.Diet{}, err
 		}
-		dayDiet, err := GetDayDietById(dayDietId)
-		if err != nil {
-			return schemas.Diet{}, err
-		}
 
-		dayDiet.Index = index
-		dayDiet.MealsAmount = len(dayDiet.Meals)
-		dayDiet.Meals = dayDiet.Meals[:min(3, len(dayDiet.Meals))]
-
-		diet.DayDiets = append(diet.DayDiets, dayDiet)
+		diet.DayDiets = append(diet.DayDiets, dayDietId)
 	}
 
 	return diet, nil
@@ -262,7 +247,7 @@ func GetDietById(id int) (schemas.Diet, error) {
 
 var DefaultDayDietName = [7]string{"Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"}
 
-func CreateDiet(name string, groupHash string) (string, error) {
+func CreateDiet(name string, groupHash string, isPersonal bool) (string, error) {
 	db, err := CreateConnection()
 	if err == nil {
 		defer db.Close()
@@ -279,12 +264,12 @@ func CreateDiet(name string, groupHash string) (string, error) {
 	id := -1
 	if err = db.QueryRow(`
 		insert into
-			diet(diet_name, diet_hash)
+			diet(diet_name, diet_hash, diet_is_personal)
 		values
-			($1, $2)
+			($1, $2, $3)
 		returning
 		    diet_id`,
-		name, hash).Scan(
+		name, hash, isPersonal).Scan(
 		&id); err != nil {
 		return "", err
 	}
@@ -318,7 +303,6 @@ func GetCurrentDiet(groupHash string) (schemas.Diet, error) {
 	currentDay := 3
 
 	diet.DayDiets = diet.DayDiets[currentDay : currentDay+1]
-	diet.DayDiets[0].Meals = []schemas.Meal{}
 
 	return diet, nil
 }
@@ -328,17 +312,26 @@ func GetCurrentDietRecipies(groupHash string) ([]string, error) {
 	if err != nil {
 		return []string{}, err
 	}
-	dayDiet := diet.DayDiets[0]
+	dayDietId := diet.DayDiets[0]
 	cnt := 0
-	for _, meal := range dayDiet.Meals {
+	dayDiet, err := GetDayDietById(dayDietId)
+	if err != nil {
+		return []string{}, err
+	}
+	for _, mealHash := range dayDiet.Meals {
+		meal, err := GetMealByHash(mealHash)
+		if err != nil {
+			return []string{}, err
+		}
 		cnt += len(meal.Dishes)
-
 	}
 	ans := make([]string, cnt)
 	cnt = 0
-	for _, meal := range dayDiet.Meals {
-		for _, dish := range meal.Dishes {
-			ans[cnt] = dish.Dish.Recipe
+	for _, mealHash := range dayDiet.Meals {
+		meal, _ := GetMealByHash(mealHash)
+		for _, dishHash := range meal.Dishes {
+			dish, _ := GetDishByHash(dishHash)
+			ans[cnt] = dish.Recipe
 			cnt++
 		}
 	}

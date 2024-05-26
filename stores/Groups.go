@@ -121,7 +121,7 @@ func CreateGroup(name string, user string) (string, error) {
 	var id int
 	if err = db.QueryRow(`
 		insert into
-			groups(group_name, group_hash)
+			groups(group_name, group_hash, current_diet_id)
 		values
 			($1, $2)
 		returning

@@ -81,7 +81,7 @@ func GetDayDietById(id int) (schemas.DayDiet, error) {
 		if err != nil {
 			return schemas.DayDiet{}, err
 		}
-		dayDiet.Meals = append(dayDiet.Meals, meal)
+		dayDiet.Meals = append(dayDiet.Meals, meal.Hash)
 	}
 
 	return dayDiet, nil
@@ -139,7 +139,7 @@ func GetDayDietByIdWithoutDishes(id int) (schemas.DayDiet, error) {
 		if err != nil {
 			return schemas.DayDiet{}, err
 		}
-		dayDiet.Meals = append(dayDiet.Meals, meal)
+		dayDiet.Meals = append(dayDiet.Meals, meal.Hash)
 	}
 
 	return dayDiet, nil

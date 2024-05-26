@@ -13,10 +13,11 @@ import (
 //
 // @Tags user
 // @Produce json
-// @Success 200 {object} handlers.GetName.ResponceBody
+// @Security Bearer
+// @Success 200 {object} handlers.GetName.ResponseBody
 // @Router /api/user/name [get]
 func GetName(c *gin.Context) {
-	type ResponceBody struct {
+	type ResponseBody struct {
 		FirstName  string `json:"name" example:"Ivan"`
 		SecondName string `json:"surname" example:"Ivanov"`
 	}
@@ -30,7 +31,7 @@ func GetName(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, ResponceBody{
+	c.JSON(http.StatusOK, ResponseBody{
 		FirstName:  name,
 		SecondName: surname,
 	})
