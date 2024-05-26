@@ -2,6 +2,7 @@ package stores
 
 import (
 	"fmt"
+	"time"
 	"zakroma_backend/schemas"
 	"zakroma_backend/utils"
 
@@ -299,8 +300,7 @@ func GetCurrentDiet(groupHash string) (schemas.Diet, error) {
 		return schemas.Diet{}, err
 	}
 
-	// TODO: get current day?
-	currentDay := 3
+	currentDay := int(time.Now().Weekday())
 
 	diet.DayDiets = diet.DayDiets[currentDay : currentDay+1]
 
