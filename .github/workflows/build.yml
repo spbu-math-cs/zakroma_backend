@@ -5,26 +5,43 @@ name: Build
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ['main']
   pull_request:
-    branches: [ "main" ]
+    branches: ['main']
 
 jobs:
-  build:
+  push_to_registry:
+    name: Push Docker image to Docker Hub
     runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+      attestations: write
+      id-token: write
     steps:
-    - uses: actions/checkout@v3
+      - name: Check out the repo
+        uses: actions/checkout@v4
 
-    - name: Set up Go
-      uses: actions/setup-go@v4
-      with:
-        go-version: '1.21'
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_REGISTRY_USERNAME }}
+          password: ${{ secrets.DOCKER_REGISTRY_PASSWORD }}
 
-    - name: Install packages
-      run: go mod download && go install github.com/swaggo/swag/cmd/swag@v1.16.3
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: monkpatch/zakroma_backend
 
-    - name: Generate API docs
-      run: swag init -g Main.go
-
-    - name: Try to build
-      run: go build -o server_entrypoint .
+      - name: Build and push Docker image
+        id: push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }},monkpatch/zakroma_backend:${{ github.head_ref || github.ref_name }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=registry,ref=monkpatch/zakroma_backend:main
+          cache-to: type=inline
