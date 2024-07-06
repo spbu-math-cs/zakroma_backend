@@ -41,5 +41,7 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }} ${{ github.head_ref || github.ref_name }}
+          tags: ${{ steps.meta.outputs.tags }} ${{ github.head_ref || github.ref_name }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=registry,ref=monkpatch/zakroma_backend:main
+          cache-to: type=inline
