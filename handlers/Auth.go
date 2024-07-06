@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 	"zakroma_backend/middleware"
 	"zakroma_backend/schemas"
@@ -8,8 +9,6 @@ import (
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
-
-	"fmt"
 )
 
 var tokens []string
