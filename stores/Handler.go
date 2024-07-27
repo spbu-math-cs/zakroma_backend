@@ -9,8 +9,8 @@ import (
 )
 
 func CreateConnection() (*sql.DB, error) {
-	db_host, env_err := os.LookupEnv("DB_HOST")
-	if env_err {
+	db_host, ok := os.LookupEnv("DB_HOST")
+	if !ok {
 		return nil, fmt.Errorf("could not find variable DB_HOST in env")
 	}
 	dataSourceName := fmt.Sprintf("host=%s port=5432 dbname=postgres user=postgres password=postgres sslmode=disable connect_timeout=10", db_host)
