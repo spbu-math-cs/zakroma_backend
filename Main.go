@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	"os"
 	"zakroma_backend/routing"
 
 	docs "zakroma_backend/docs"
@@ -32,7 +34,11 @@ var secret = []byte("zakrooooooma_baccckendddd_secreeeeet")
 // @name Authorization
 // @description Type "Bearer" followed by a space and JWT token.
 func main() {
-	docs.SwaggerInfo.BasePath = "/"
+	if tag, ok := os.LookupEnv("DOCKER_TAG"); ok {
+		docs.SwaggerInfo.BasePath = fmt.Sprintf("/%s/", tag)
+	} else {
+		docs.SwaggerInfo.BasePath = "/"
+	}
 
 	router := gin.Default()
 	router.Use(gin.Recovery())
